@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+
+service Explanations {
+    rpc GetExplanation (ExplanationsRequest) returns (ExplanationsResponse);
+}
+
+service Influences {
+    rpc ComputeInfluences (stream InfluenceRequest) returns (InfluenceResponse);
+}
+
+// ----------------- Explanations Fields ----------------------------
+
+
+message ExplanationsRequest {
+    string explanation_type = 1;
+    string param_grid = 2;
+    bytes model = 3;
+    string feature1 = 4;
+    string feature2 = 5;
+    // Include other fields if needed based on the chosen explanation type
+}
+
+message ExplanationsResponse {
+
+    // Fields specific to ComputePDP explanation
+    string pdp_hp_values = 1;
+    string pdp_values = 2;
+
+    // Fields specific to ComputePDP2D explanation
+    string pdp2d_xi = 3;
+    string pdp2d_yi = 4;
+    string pdp2d_zi = 5;
+
+    // Fields specific to ComputeALE explanation
+    string ale_data = 6;
+}
+
+// ---------------------- Influences Fields ---------------------------
+
+message InfluenceRequest {
+    bytes train_data = 1;
+    bytes model = 2;
+    bytes test_data = 3;
+    bytes train_labels = 4;
+    bytes test_labels = 5;
+    int32 num_influential = 6;
+    bytes untransformed_train = 7;
+    bytes untransformed_train_labels = 8;
+}
+
+message InfluenceResponse {
+    repeated float influences = 1;
+    bytes positive = 2;
+    bytes negative = 3;
+}
