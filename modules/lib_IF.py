@@ -51,7 +51,7 @@ def compute_IF(
                 )
 
                 training_data = (torch.tensor(training_data.astype(float), dtype=torch.float), torch.tensor(train_labels, dtype=torch.float))
-                test_data = (torch.tensor(test_data.astype(float), dtype=torch.float).reshape(1,-1), torch.tensor(test_labels, dtype=torch.float).unsqueeze(-1))
+                test_data = (torch.tensor(test_data.astype(float), dtype=torch.float).reshape(1,-1), torch.tensor(test_labels, dtype=torch.float).unsqueeze(-1).unsqueeze(-1))
 
                 influence_model = DirectInfluence(
                         model,
