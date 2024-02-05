@@ -2,8 +2,13 @@ from torch.utils.data import DataLoader, TensorDataset
 import torch
 import torch.nn as nn
 import numpy as np
-from pydvl.influence import compute_influences
-from pydvl.influence.torch import TorchTwiceDifferentiable
+from pydvl.influence.torch import (
+    DirectInfluence,
+    CgInfluence,
+    ArnoldiInfluence,
+    #EkfacInfluence,
+)
+#from pydvl.influence.torch import TorchTwiceDifferentiable
 import pandas as pd
 from IPython.display import display
 from sklearn.preprocessing import StandardScaler,LabelEncoder,OneHotEncoder,MinMaxScaler
@@ -40,50 +45,60 @@ def compute_IF(
 
                 train_data_loader = DataLoader(
                         TensorDataset(
-                        torch.as_tensor(training_data, dtype=torch.float), 
-                        torch.as_tensor(train_labels, dtype=torch.float).unsqueeze(-1)),
+                        torch.tensor(training_data.astype(float), dtype=torch.float), 
+                        torch.tensor(train_labels.astype(float), dtype=torch.float)),
                         batch_size=32,
                 )
 
-                test_data_loader = DataLoader(
-                        TensorDataset(
-                        torch.as_tensor(test_data, dtype=torch.float).reshape(1,-1),
-                        torch.as_tensor(test_labels, dtype=torch.float).unsqueeze(-1).unsqueeze(-1)),
-                        batch_size=32,
-                )
+                training_data = (torch.tensor(training_data.astype(float), dtype=torch.float), torch.tensor(train_labels, dtype=torch.float))
+                test_data = (torch.tensor(test_data.astype(float), dtype=torch.float).reshape(1,-1), torch.tensor(test_labels, dtype=torch.float).unsqueeze(-1))
 
-                influence_values = compute_influences(
-                        differentiable_model=TorchTwiceDifferentiable(model, loss),
-                        training_data=train_data_loader,
-                        test_data=test_data_loader,
-                        influence_type=influence_type,
-                        inversion_method=inversion_method,
-                        hessian_regularization = hessian_regularization  # use 'cg' for big models
+                influence_model = DirectInfluence(
+                        model,
+                        loss,
+                        hessian_regularization=hessian_regularization,
                 )
+                influence_model = influence_model.fit(train_data_loader)
+                influence_values = influence_model.influences(*test_data, *training_data, mode=influence_type)
+
+                # influence_values = compute_influences(
+                #         differentiable_model=TorchTwiceDifferentiable(model, loss),
+                #         training_data=train_data_loader,
+                #         test_data=test_data_loader,
+                #         influence_type=influence_type,
+                #         inversion_method=inversion_method,
+                #         hessian_regularization = hessian_regularization  # use 'cg' for big models
+                # )
         else:
+                # train_data_loader = DataLoader(
+                #         TensorDataset(
+                #         torch.tensor(training_data.astype(np.float32), dtype=torch.float32), 
+                #         torch.tensor(train_labels.astype(np.float32), dtype=torch.float32).unsqueeze(-1)),
+                #         batch_size=32,
+                # )
+
+                # training_data = (torch.tensor(training_data.astype(np.float32), dtype=torch.float32), torch.tensor(train_labels, dtype=torch.float32))
+                # test_data = (torch.tensor(test_data.astype(np.float32), dtype=torch.float32), torch.tensor(test_labels, dtype=torch.float32).unsqueeze(-1))
+                train_x = torch.as_tensor(training_data,dtype=torch.float)
+                train_y = torch.as_tensor(train_labels, dtype=torch.float).unsqueeze(-1)
+                test_x = torch.as_tensor(test_data,dtype=torch.float)
+                test_y = torch.as_tensor(test_labels, dtype=torch.float).unsqueeze(-1)
+
                 train_data_loader = DataLoader(
-                        TensorDataset(
-                        torch.as_tensor(training_data, dtype=torch.float), 
-                        torch.as_tensor(train_labels, dtype=torch.float).unsqueeze(-1)),
+                        TensorDataset(train_x, train_y),
                         batch_size=32,
                 )
 
-                test_data_loader = DataLoader(
-                        TensorDataset(
-                        torch.as_tensor(test_data, dtype=torch.float),
-                        torch.as_tensor(test_labels, dtype=torch.float).unsqueeze(-1)),
-                        batch_size=32,
+
+                influence_model = DirectInfluence(
+                        model,
+                        loss,
+                        hessian_regularization=hessian_regularization,
                 )
 
-                influence_values = compute_influences(
-                        differentiable_model=TorchTwiceDifferentiable(model, loss),
-                        training_data=train_data_loader,
-                        test_data=test_data_loader,
-                        influence_type=influence_type,
-                        inversion_method=inversion_method,
-                        hessian_regularization = hessian_regularization  # use 'cg' for big models
-                )
-        
+                influence_model = influence_model.fit(train_data_loader)
+                influence_values = influence_model.influences(test_x, test_y, train_x, train_y, mode=influence_type)
+                print(influence_values)
         return influence_values
 
 def show_neg_inf_instance(influences,num_instances,train_data,train_labels):

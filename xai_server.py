@@ -54,7 +54,7 @@ class MyInfluencesService(InfluencesServicer):
     
     def ComputeInfluences(self, request_iterator, context):
         # Deserialize the model and data
-
+        print('Reading data')
         dataframe = pd.DataFrame()
         label = pd.DataFrame()
         for request in request_iterator:
@@ -69,6 +69,7 @@ class MyInfluencesService(InfluencesServicer):
         test_data =  pd.read_parquet(io.BytesIO(request.test_data))        
         test_labels =  pd.read_parquet(io.BytesIO(request.test_labels))
         num_influential = request.num_influential
+        print('Data received')
         # untransformed_train = pd.read_parquet(io.BytesIO(request.untransformed_train))
         # untransformed_train_labels = pd.read_parquet(io.BytesIO(request.untransformed_train_labels))
 
@@ -77,13 +78,12 @@ class MyInfluencesService(InfluencesServicer):
 
         x = dataframe.values
         xt = test_data.values
-  
-
+        
         #Compute influences 
         influences = compute_IF(model=model,loss=F.binary_cross_entropy,training_data = x, 
                                 test_data = xt, train_labels= y, test_labels= yt,
                                 influence_type='up', inversion_method='direct', hessian_regularization=0.5)
-
+        
         show_influences(influences,5,dataframe,label)
         positive = show_pos_inf_instance(influences,num_influential,dataframe,label)
         negative = show_neg_inf_instance(influences,num_influential,dataframe,label)
