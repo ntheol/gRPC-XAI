@@ -1,6 +1,18 @@
 # Explainability Module
 The Explainability Module component is used to enhance the trustworthiness of the model. <be>
 It extends the original explainability algorithms to provide explanations for the experimental process and the hyperparameters of the trained ML model. 
+
+UNSW_NB15.ipynb notebook contains an example of using the Explainability Module via gRPC framework for the transfer of data between a client and a server.
+The notebook contains the whole process of dataset preprocessing and model training and then the use of the different Explanation Functions.
+
+Right now we have implemented on our module the below Explainability Algorithms:
+For Pipeline Explanations:
+- PDPlots
+- ALEPlots
+- InfluenceFunctions
+- CounterfactualExplanations
+For Model Explanations:
+- PDPlots
 # Setup
 
 ## Download Source Code
