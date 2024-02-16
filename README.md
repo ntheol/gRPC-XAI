@@ -6,11 +6,13 @@ UNSW_NB15.ipynb notebook contains an example of using the Explainability Module 
 The notebook contains the whole process of dataset preprocessing and model training and then the use of the different Explanation Functions.
 
 Right now we have implemented on our module the below Explainability Algorithms:
+
 For Pipeline Explanations:
 - PDPlots
 - ALEPlots
 - InfluenceFunctions
 - CounterfactualExplanations
+- 
 For Model Explanations:
 - PDPlots
 # Setup
