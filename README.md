@@ -1,6 +1,22 @@
 # Explainability Module
 The Explainability Module component is used to enhance the trustworthiness of the model. <be>
 It extends the original explainability algorithms to provide explanations for the experimental process and the hyperparameters of the trained ML model. 
+# Setup
+
+## Download Source Code
+
+```shell
+git clone https://github.com/ntheol/gRPC-XAI.git)https://github.com/ntheol/gRPC-XAI.git
+```
+### Create virtual enviroment
+```shell
+# using pip
+pip install -r requirements.txt
+
+# using Conda
+conda create --name <env_name> --file requirements.txt
+```
+# Explainability Module Workflow
 
 ## 1. Train an ML Model
 Given a labeled dataset, an ML pipeline is trained using standard methodologies.
@@ -24,19 +40,3 @@ Users then select the specific method for obtaining explanations:
   
   *For Pipeline Explainability Type*: A surrogate model is trained with different hyperparameter configurations and their respective predictions on the misclassified test instance.
 
-
-# Setup
-
-## Download Source Code
-
-```shell
-git clone https://github.com/ntheol/gRPC-XAI.git)https://github.com/ntheol/gRPC-XAI.git
-```
-### Create virtual enviroment
-```shell
-# using pip
-pip install -r requirements.txt
-
-# using Conda
-conda create --name <env_name> --file requirements.txt
-```
