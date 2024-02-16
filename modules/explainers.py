@@ -11,6 +11,8 @@ def ComputePDP(param_grid, model):
         param_space, name = dimensions_aslists(param_grid)
         space = Space(param_space)
         space.set_transformer_by_type('normalize',Categorical)
+        space.set_transformer_by_type('normalize',Integer)
+        space.set_transformer_by_type('normalize',Real)
 
         plot_dims = []
         for row in range(space.n_dims):
@@ -50,6 +52,8 @@ def ComputePDP2D(param_grid, model,feature1,feature2):
         param_space, name = dimensions_aslists(param_grid)
         space = Space(param_space)
         space.set_transformer_by_type('normalize',Categorical)
+        space.set_transformer_by_type('normalize',Integer)
+        space.set_transformer_by_type('normalize',Real)
 
         plot_dims = []
         for row in range(space.n_dims):
@@ -77,25 +81,19 @@ def ComputeALE(param_grid, model):
         param_space, name = dimensions_aslists(param_grid)
         space = Space(param_space)
         space.set_transformer_by_type('normalize',Categorical)
+        space.set_transformer_by_type('normalize',Integer)
+        space.set_transformer_by_type('normalize',Real)
 
         plot_dims = []
         for row in range(space.n_dims):
             if space.dimensions[row].is_constant:
                 continue
             plot_dims.append((row, space.dimensions[row]))
-            
+        print(param_grid)
         pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
         data = pd.DataFrame(pdp_samples,columns=[n for n in name])
         x_vals = list(param_grid.keys())
-
-        plot_dims = []
-        for row in range(space.n_dims):
-            if space.dimensions[row].is_constant:
-                continue
-            plot_dims.append((row, space.dimensions[row]))
-        
-        pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
-
+        print(data)
         dataframes_list = []
 
         for i,feat in enumerate(name):

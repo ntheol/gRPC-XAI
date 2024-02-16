@@ -4,9 +4,6 @@ import torch.nn as nn
 import numpy as np
 from pydvl.influence.torch import (
     DirectInfluence,
-    CgInfluence,
-    ArnoldiInfluence,
-    #EkfacInfluence,
 )
 #from pydvl.influence.torch import TorchTwiceDifferentiable
 import pandas as pd
@@ -61,24 +58,7 @@ def compute_IF(
                 influence_model = influence_model.fit(train_data_loader)
                 influence_values = influence_model.influences(*test_data, *training_data, mode=influence_type)
 
-                # influence_values = compute_influences(
-                #         differentiable_model=TorchTwiceDifferentiable(model, loss),
-                #         training_data=train_data_loader,
-                #         test_data=test_data_loader,
-                #         influence_type=influence_type,
-                #         inversion_method=inversion_method,
-                #         hessian_regularization = hessian_regularization  # use 'cg' for big models
-                # )
         else:
-                # train_data_loader = DataLoader(
-                #         TensorDataset(
-                #         torch.tensor(training_data.astype(np.float32), dtype=torch.float32), 
-                #         torch.tensor(train_labels.astype(np.float32), dtype=torch.float32).unsqueeze(-1)),
-                #         batch_size=32,
-                # )
-
-                # training_data = (torch.tensor(training_data.astype(np.float32), dtype=torch.float32), torch.tensor(train_labels, dtype=torch.float32))
-                # test_data = (torch.tensor(test_data.astype(np.float32), dtype=torch.float32), torch.tensor(test_labels, dtype=torch.float32).unsqueeze(-1))
                 train_x = torch.as_tensor(training_data,dtype=torch.float)
                 train_y = torch.as_tensor(train_labels, dtype=torch.float).unsqueeze(-1)
                 test_x = torch.as_tensor(test_data,dtype=torch.float)

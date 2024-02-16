@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from skopt.plots import _cat_format,partial_dependence_2D,partial_dependence_1D
 from matplotlib.ticker import MaxNLocator, FuncFormatter  # noqa: E402
-from skopt.space import Categorical,Real
+from skopt.space import Categorical,Real,Integer
 from functools import partial
 import numpy as np
 import skopt 
@@ -15,34 +15,69 @@ from sklearn.pipeline import Pipeline
 from typing import List,Dict,Tuple
 from skopt.space import Space
 from modules.optimizer import ModelOptimizer
+import copy
+from sklearn.gaussian_process.kernels import ConstantKernel,Matern
+from sklearn.gaussian_process.kernels import WhiteKernel
+from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
+from sklearn.svm import SVC
+from sklearn.preprocessing import OneHotEncoder
+from copy import deepcopy
 
-def transform_grid(param_grid: Dict
+def transform_grid_plt(param_grid: Dict
                    ) -> Dict:
-
+    param_grid_copy = copy.deepcopy(param_grid)
     for key, value in param_grid.items():
 
-        if isinstance(param_grid[key],tuple):
-            if is_logspaced(np.array(param_grid[key])) :
-                mins = min(param_grid[key])
-                maxs = max(param_grid[key])
-                param_grid[key] = Real(mins,maxs,prior='log-uniform',transform='normalize')
+        if isinstance(param_grid_copy[key],tuple):
+            if (len(param_grid_copy[key]) == 3)  and (type(param_grid_copy[key][2]) == str):
+                mins = param_grid_copy[key][0]
+                maxs = param_grid_copy[key][1]
+                param_grid_copy[key] = (mins,maxs)
             else:
-                mins = min(param_grid[key])
-                maxs = max(param_grid[key])
-                param_grid[key] = Real(mins,maxs,prior='uniform',transform='normalize')
+                # if is_logspaced(np.array(param_grid[key])) :
+                #     mins = min(param_grid[key])
+                #     maxs = max(param_grid[key])
+                #     param_grid[key] = Real(mins,maxs,prior='log-uniform',transform='normalize')
+                # else:
+                    mins = min(param_grid_copy[key])
+                    maxs = max(param_grid_copy[key])
+                    param_grid_copy[key] = (mins,maxs)
 
         # if isinstance(param_grid[key][0],(int,float)) and isinstance(param_grid[key][2],(str)):
         #     continue
         # if isinstance(param_grid[key][0],(int,float)):
         #     param_grid[key] = tuple((min(param_grid[key]),max(param_grid[key])))
 
-        if isinstance(value, list) and not isinstance(param_grid[key][0],(str,int,float,type(None))):
-            param_grid[key] = [str(item) for item in value]
-        #elif isinstance(value, list) and isinstance(param_grid[key][0],(str,int,float,type(None))):
-        # elif isinstance(value, tuple) and not isinstance(param_grid[key][0],(int,float)):
-        #     param_grid[key] = [str(item) if not isinstance(item, (str,int,float,type(None))) else item for item in value]
-    
-    return param_grid
+        if isinstance(value, list) and not isinstance(param_grid_copy[key][0],(str,int,float,type(None))):
+            param_grid_copy[key] = [str(item) for item in value]
+        # if isinstance(value, list) and isinstance(param_grid[key][0],(int,float)):
+        #     mins = min(param_grid[key])
+        #     maxs = max(param_grid[key])
+        #     param_grid[key] = Integer(mins,maxs,prior='uniform',transform='normalize')             
+
+    return param_grid_copy
+
+def transform_grid(param_grid: Dict
+                   ) -> Dict:
+    param_grid_copy = copy.deepcopy(param_grid)
+    for key, value in param_grid.items():
+
+        if isinstance(param_grid_copy[key],tuple):
+            if (len(param_grid_copy[key]) == 3)  and (type(param_grid_copy[key][2]) == str):
+                mins = param_grid_copy[key][0]
+                maxs = param_grid_copy[key][1]
+                param_grid_copy[key] = Real(mins,maxs,prior='log-uniform',transform='normalize')
+            else:
+
+                mins = min(param_grid_copy[key])
+                maxs = max(param_grid_copy[key])
+                param_grid_copy[key] = Integer(mins,maxs,prior='uniform',transform='normalize')
+
+
+        if isinstance(value, list) and not isinstance(param_grid_copy[key][0],(str,int,float,type(None))):
+            param_grid_copy[key] = [str(item) for item in value]        
+
+    return param_grid_copy
 
 
 
@@ -390,6 +425,9 @@ def gaussian_objective(objective : str,
     return X,y
 
 def is_logspaced(arr):
+    if len(arr) < 3:
+        return False  # Arrays with less than 3 elements are not log-spaced
+
     ratios = arr[1:] / arr[:-1]
     return np.allclose(ratios, ratios[0])
 
@@ -400,7 +438,7 @@ def plot_pdp_1D_grpc(xi,yi,param_grid):
     param_grid = transform_grid(param_grid)
     param_space, name = dimensions_aslists(param_grid)
     space = Space(param_space)
-    space.set_transformer_by_type('normalize',Categorical)
+    space.set_transformer_by_type('label',Categorical)
 
     plot_dims = []
     for row in range(space.n_dims):
@@ -447,7 +485,7 @@ def plot_pdp_1D_grpc(xi,yi,param_grid):
             ax_.plot(xi[i], yi[i])
 
             fig.suptitle('Partial Dependence Plots for each Hyperparameter')
-            ax_.set_xlabel(features[i])
+            ax_.set_xlabel(name[i])
             #ax_.set_ylabel(objectives[0])
 
 def plot_pdp_2D_grpc(xi,yi,zi,param_grid,feature1,feature2):
@@ -456,7 +494,7 @@ def plot_pdp_2D_grpc(xi,yi,zi,param_grid,feature1,feature2):
     param_grid = transform_grid(param_grid)
     param_space, name = dimensions_aslists(param_grid)
     space = Space(param_space)
-    space.set_transformer_by_type('normalize',Categorical)
+    space.set_transformer_by_type('label',Categorical)
 
     plot_dims = []
     for row in range(space.n_dims):
@@ -489,8 +527,8 @@ def plot_pdp_2D_grpc(xi,yi,zi,param_grid,feature1,feature2):
         
     im = ax.contourf(xi, yi, zi, 10,
                               cmap='viridis_r')
-    ax.set_xlabel('preprocessor__num__scaler')
-    ax.set_ylabel('Model__lr')
+    ax.set_xlabel(feature1)
+    ax.set_ylabel(feature2)
     fig.colorbar(im,label='Accuracy Score')
 
 
@@ -499,7 +537,7 @@ def plot_ale_grpc(data,param_grid):
     param_grid = transform_grid(param_grid)
     param_space, name = dimensions_aslists(param_grid)
     space = Space(param_space)
-    space.set_transformer_by_type('normalize',Categorical)
+    space.set_transformer_by_type('label',Categorical)
 
     plot_dims = []
     for row in range(space.n_dims):
@@ -523,12 +561,12 @@ def plot_ale_grpc(data,param_grid):
     
         if not iscat[i]:
             #ax_.set_xscale('log')    
-            sample = space.rvs(n_samples=51) # grid_size + 1
+            sample = space.rvs(n_samples=len(ale_eff)) # grid_size + 1
             xi = space.transform(sample)
 
-            xi[:,0] = ale_eff.index.values
+            xi[:,i] = ale_eff.index.values
             xi = space.inverse_transform(xi)
-            ax_.plot(np.array(xi)[:,0].astype(float),ale_eff['eff'])
+            ax_.plot([x[i] for x in xi],ale_eff['eff'])
         else:
             ax_.errorbar(
             ale_eff.index.astype(str),
@@ -562,3 +600,102 @@ def plot_ale_grpc(data,param_grid):
 
 def convert_to_float32(train):
     return train.astype(np.float32)
+
+def proxy_model(parameter_grid,optimizer,objective):
+
+    param_grid = transform_grid(parameter_grid)
+    param_space, name = dimensions_aslists(param_grid)
+    space = Space(param_space)
+
+    space.set_transformer_by_type('label',Categorical)
+    space.set_transformer_by_type('normalize',Integer)
+
+    hyperparameters = optimizer.cv_results_['params']
+    samples = transform_samples(hyperparameters,space,name)
+    # Prepare the hyperparameters and corresponding accuracy scores
+    n_dims = len(space.dimensions)
+    is_cat = space.is_categorical
+    # Convert hyperparameters to a feature matrix (X) and accuracy scores to a target vector (y)
+    # X = np.array([list(h.values()) for h in hyperparameters])
+    # X = samples
+    # y = np.array(accuracy_scores)
+    X1 , y1 = gaussian_objective(objective,optimizer,samples)
+
+    # if is_cat:
+    #     other_kernel = HammingKernel(length_scale=np.ones(n_dims))
+    # else:
+    #     other_kernel = Matern(
+    #         length_scale=np.ones(n_dims),
+    #         length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5)
+    # Define the surrogate model with Gaussian Process Regression
+    kernel = ConstantKernel(1.0, (0.01, 1000.0)) \
+            *Matern(
+            length_scale=np.ones(n_dims),
+            length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5) + WhiteKernel()
+
+    surrogate_model_accuracy = GaussianProcessRegressor(kernel=kernel,normalize_y=True,random_state=1,noise="gaussian",
+                n_restarts_optimizer=2)
+
+    # Fit the surrogate model on the hyperparameters and accuracy scores
+    surrogate_model_accuracy.fit(X1, y1)
+
+    return surrogate_model_accuracy
+
+    # # Generate new hyperparameters for evaluation
+    # new_hyperparameters = space.transform([[1, 'auto',2 ,150,'RobustScaler()']])  # Example hyperparameters
+
+    # # Predict the accuracy scores using the surrogate model
+    # predicted_scores = surrogate_model.predict(new_hyperparameters)
+
+    # # Print the predicted accuracy scores
+    # print("Predicted Accuracy Scores:", predicted_scores)
+
+def instance_proxy(X_train,y_train,optimizer, misclassified_instance,params):
+
+    # Creating proxy dataset for each hyperparamet configuration - prediction of test instance
+    proxy = pd.DataFrame(columns = ['hyperparameters','BinaryLabel'])
+    # Iterate through each hyperparameter combination
+    for params_dict in optimizer.cv_results_['params']:
+        # Retrain the model with the current hyperparameters
+        mdl = deepcopy(optimizer.estimator)
+        mdl.set_params(**params_dict)
+        mdl.fit(X_train, y_train)
+        
+        # Make prediction for the misclassified instance
+        prediction = mdl.predict(misclassified_instance.to_frame().T)[0]
+        proxy = proxy.append({'hyperparameters' : params_dict, 'BinaryLabel': prediction},ignore_index=True)
+    
+    keys = list(proxy['hyperparameters'].iloc[0].keys())
+
+    # Create new columns for each key
+    for key in keys:
+        proxy[key] = proxy['hyperparameters'].apply(lambda x: x.get(key, None))
+
+# Drop the original "Hyperparameters" column
+    proxy_dataset = proxy.drop(columns=['hyperparameters'])
+    proxy_dataset['BinaryLabel'] = proxy_dataset['BinaryLabel'].astype(int)
+
+    param_grid = transform_grid(params)
+    param_space, name = dimensions_aslists(param_grid)
+    space = Space(param_space)
+
+    plot_dims = []
+    for row in range(space.n_dims):
+        if space.dimensions[row].is_constant:
+            continue
+        plot_dims.append((row, space.dimensions[row]))
+    iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
+    categorical = [name[i] for i,value in enumerate(iscat) if value == True]
+    proxy_dataset[categorical] = proxy_dataset[categorical].astype(str)
+
+    # Create proxy model
+    cat_transf = ColumnTransformer(transformers=[("cat", OneHotEncoder(), categorical)], remainder="passthrough")
+
+    proxy_model = Pipeline([
+        ("one-hot", cat_transf),
+        ("svm", SVC(kernel='linear', C=2.0 ,probability=True))
+    ])
+
+    proxy_model = proxy_model.fit(proxy_dataset.drop(columns='BinaryLabel'), proxy_dataset['BinaryLabel'])
+
+    return proxy_model , proxy_dataset
