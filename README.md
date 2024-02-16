@@ -12,9 +12,10 @@ For Pipeline Explanations:
 - ALEPlots
 - InfluenceFunctions
 - CounterfactualExplanations
-- 
+  
 For Model Explanations:
 - PDPlots
+- ALEPlots(in progress)
 # Setup
 
 ## Download Source Code
