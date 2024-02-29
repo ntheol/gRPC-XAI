@@ -38,7 +38,13 @@ message ExplanationsRequest {
 //------------------ Model Explainability --------------------------------------------------
 
     // ------------ PDP Fields -------------------------
+    // the other same as Pipeline Explainability plus
     string features = 14;
+
+    // ------------ CounterfactualExplanations Fields -------------------------
+    // same as Model explainability plus target target label 
+    string target = 15;
+
 
 
     // Include other fields if needed based on the chosen explanation type

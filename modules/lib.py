@@ -22,6 +22,9 @@ from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from sklearn.svm import SVC
 from sklearn.preprocessing import OneHotEncoder
 from copy import deepcopy
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler,RobustScaler,MinMaxScaler
 
 def transform_grid_plt(param_grid: Dict
                    ) -> Dict:
@@ -398,9 +401,9 @@ def transform_samples(hyperparameters : List[Dict],
         for i in range(len(sublist)):
             if not isinstance(sublist[i], (int,float,str,type(None))):
                 sublist[i] = str(sublist[i])
-    samples = space.transform(spaces)
+    #samples = space.transform(spaces)
 
-    return samples
+    return spaces
 
 def gaussian_objective(objective : str, 
                        optimizer : ModelOptimizer,
@@ -479,9 +482,9 @@ def plot_pdp_1D_grpc(xi,yi,param_grid):
             else:
                 ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
                                                             integer=iscat[i]))
-            if iscat[i]:
-                ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, dim)))
+            # if iscat[i]:
+            #     ax_.xaxis.set_major_formatter(FuncFormatter(
+            #                 partial(_cat_format, dim)))
             ax_.plot(xi[i], yi[i])
 
             fig.suptitle('Partial Dependence Plots for each Hyperparameter')
@@ -510,19 +513,19 @@ def plot_pdp_2D_grpc(xi,yi,zi,param_grid,feature1,feature2):
     _ ,dim_2 = plot_dims[index2]
     fig, ax = plt.subplots()
     iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
-    if not iscat[index1]:  # bounds not meaningful for categoricals 
-            ax.set_ylim(*dim_1.bounds)
-    else:
-        ax.yaxis.set_major_locator(MaxNLocator(6, integer=iscat[index1]))
-        ax.yaxis.set_major_formatter(FuncFormatter(
-                        partial(_cat_format, dim_1)))
-    if iscat[index2]:
-                ax.xaxis.set_major_locator(MaxNLocator(6,integer=iscat[index2]))
-                # partial() avoids creating closures in a loop
-                ax.xaxis.set_major_formatter(FuncFormatter(
-                    partial(_cat_format, dim_2)))
-    else:
-            ax.set_xlim(*dim_2.bounds)
+    # if not iscat[index1]:  # bounds not meaningful for categoricals 
+    #         ax.set_ylim(*dim_1.bounds)
+    # else:
+    #     ax.yaxis.set_major_locator(MaxNLocator(6, integer=iscat[index1]))
+    #     ax.yaxis.set_major_formatter(FuncFormatter(
+    #                     partial(_cat_format, dim_1)))
+    # if iscat[index2]:
+    #             ax.xaxis.set_major_locator(MaxNLocator(6,integer=iscat[index2]))
+    #             # partial() avoids creating closures in a loop
+    #             ax.xaxis.set_major_formatter(FuncFormatter(
+    #                 partial(_cat_format, dim_2)))
+    # else:
+    #         ax.set_xlim(*dim_2.bounds)
 
         
     im = ax.contourf(xi, yi, zi, 10,
@@ -561,12 +564,12 @@ def plot_ale_grpc(data,param_grid):
     
         if not iscat[i]:
             #ax_.set_xscale('log')    
-            sample = space.rvs(n_samples=len(ale_eff)) # grid_size + 1
-            xi = space.transform(sample)
+            # sample = space.rvs(n_samples=len(ale_eff)) # grid_size + 1
+            # xi = space.transform(sample)
 
-            xi[:,i] = ale_eff.index.values
-            xi = space.inverse_transform(xi)
-            ax_.plot([x[i] for x in xi],ale_eff['eff'])
+            # xi[:,i] = ale_eff.index.values
+            # xi = space.inverse_transform(xi)
+            ax_.plot(ale_eff.index,ale_eff['eff'])
         else:
             ax_.errorbar(
             ale_eff.index.astype(str),
@@ -607,8 +610,9 @@ def proxy_model(parameter_grid,optimizer,objective):
     param_space, name = dimensions_aslists(param_grid)
     space = Space(param_space)
 
-    space.set_transformer_by_type('label',Categorical)
-    space.set_transformer_by_type('normalize',Integer)
+    # space.set_transformer_by_type('normalize',Categorical)
+    # space.set_transformer_by_type('normalize',Integer)
+    # space.set_transformer_by_type('normalize',Real)
 
     hyperparameters = optimizer.cv_results_['params']
     samples = transform_samples(hyperparameters,space,name)
@@ -620,21 +624,34 @@ def proxy_model(parameter_grid,optimizer,objective):
     # X = samples
     # y = np.array(accuracy_scores)
     X1 , y1 = gaussian_objective(objective,optimizer,samples)
+    cat_columns = X1.select_dtypes(exclude=[np.number]).columns.tolist()
+    numeric_columns = X1.select_dtypes(exclude=['object']).columns.tolist()
+    numerical_transformer = Pipeline([
+        ('scaler', StandardScaler())
+    ])
 
-    # if is_cat:
-    #     other_kernel = HammingKernel(length_scale=np.ones(n_dims))
-    # else:
-    #     other_kernel = Matern(
+
+    one_hot_encoded_transformer = Pipeline([
+        ('one_hot_encoder', OneHotEncoder())
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numerical_transformer,numeric_columns),
+            # ('label',label_encoded_transformer,label_encoded_features),
+            ('one_hot', one_hot_encoded_transformer, cat_columns)
+        ])
+    surrogate_model_accuracy = Pipeline([("preprocessor", preprocessor),
+                            ("Model", LinearRegression())])
+
+
+    # kernel = ConstantKernel(1.0, (0.01, 1000.0)) \
+    #         *Matern(
     #         length_scale=np.ones(n_dims),
-    #         length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5)
-    # Define the surrogate model with Gaussian Process Regression
-    kernel = ConstantKernel(1.0, (0.01, 1000.0)) \
-            *Matern(
-            length_scale=np.ones(n_dims),
-            length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5) + WhiteKernel()
+    #         length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5) + WhiteKernel()
 
-    surrogate_model_accuracy = GaussianProcessRegressor(kernel=kernel,normalize_y=True,random_state=1,noise="gaussian",
-                n_restarts_optimizer=2)
+    # surrogate_model_accuracy = GaussianProcessRegressor(kernel=kernel,normalize_y=True,random_state=1,noise="gaussian",
+    #             n_restarts_optimizer=2)
 
     # Fit the surrogate model on the hyperparameters and accuracy scores
     surrogate_model_accuracy.fit(X1, y1)

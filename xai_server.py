@@ -16,6 +16,7 @@ from modules.lib import *
 from modules.ale import *
 from modules.explainers import *
 import dice_ml
+from modules.ALE_generic import ale
 
 class MyExplanationsService(ExplanationsServicer):
 
@@ -98,7 +99,7 @@ class MyExplanationsService(ExplanationsServicer):
                         cfs=cfs
                     )
             elif explanation_type == 'Model':
-                if explanation_method == 'PDPlots' or explanation_method == '2D_PDPlots':
+                if explanation_method == 'PDPlots' or explanation_method == '2D_PDPlots' or explanation_method == 'CounterfactualExplanations' or explanation_method == 'ALEPlots':
                     chunk_df = pd.read_parquet(io.BytesIO(request.train_data))
                     dataframe = pd.concat([dataframe, chunk_df], ignore_index=True)
 
@@ -135,6 +136,42 @@ class MyExplanationsService(ExplanationsServicer):
                         pdp_vals=json.dumps([value.tolist() for value in pdp['grid_values']]),
                         pdp_effect=json.dumps(pdp['average'].tolist())
                     )
+        elif explanation_method == 'CounterfactualExplanations' and explanation_type == 'Model':
+            query = pd.read_parquet(io.BytesIO(request.query))
+            model = torch.load(io.BytesIO(request.model), map_location=torch.device('cpu'))  
+            target = request.target
+            d = dice_ml.Data(dataframe=dataframe, 
+                continuous_features=dataframe.drop(columns=target).select_dtypes(include='number').columns.tolist()
+                , outcome_name=target)
+            
+            # Using sklearn backend
+            m = dice_ml.Model(model=model, backend="sklearn")
+            # Using method=random for generating CFs
+            exp = dice_ml.Dice(d, m, method="random")
+            e1 = exp.generate_counterfactuals(query, total_CFs=5, desired_class="opposite",sample_size=5000)
+            e1.visualize_as_dataframe(show_only_changes=True)
+            cfs = e1.cf_examples_list[0].final_cfs_df
+            display(cfs)
+            cfs = cfs.to_parquet(None)
+
+            return xai_service_pb2.ExplanationsResponse(
+                cfs=cfs
+            )
+        elif explanation_method == 'ALEPlots' and explanation_type == 'Model':
+            model = torch.load(io.BytesIO(request.model), map_location=torch.device('cpu')) 
+            features = request.features
+            if dataframe[features].dtype in ['int','float']:
+                ale_eff = ale(X=dataframe, model=model, feature=[features],plot=False, grid_size=50, include_CI=True, C=0.95)
+            else:
+                ale_eff = ale(X=dataframe, model=model, feature=[features],plot=False, grid_size=50, predictors=dataframe.columns.tolist(), include_CI=True, C=0.95)
+            dataframes_list = []
+            dataframes_list.append(ale_eff)
+            d = json.dumps([df.to_json(orient='split') for df in dataframes_list])
+
+            return xai_service_pb2.ExplanationsResponse(
+                ale_data=d
+            )
+
 
         elif explanation_method == 'InfluenceFunctions':
             model = torch.load(io.BytesIO(request.model), map_location=torch.device('cpu'))             

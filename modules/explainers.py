@@ -2,7 +2,7 @@ import json
 import numpy as np
 from modules.lib_IF import *
 from modules.lib import *
-from skopt.plots import partial_dependence_1D
+from modules.pdp import partial_dependence_1D,partial_dependence_2D
 from modules.ale import *
 
 def ComputePDP(param_grid, model):
@@ -20,7 +20,9 @@ def ComputePDP(param_grid, model):
                 continue
             plot_dims.append((row, space.dimensions[row]))
             
-        pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        # pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        pdp_samples = space.rvs(n_samples=1000,random_state=123456)
+
         x_vals = list(param_grid.keys())
 
         n_dims = len(plot_dims)
@@ -32,6 +34,8 @@ def ComputePDP(param_grid, model):
                                                index,
                                                samples=pdp_samples,
                                                n_points=40)
+            # if isinstance(dim,Categorical):
+            #      xi1 = np.array(space.dimensions[i].categories)
             xi.append(xi1)
             yi.append(yi1)
             
@@ -61,13 +65,20 @@ def ComputePDP2D(param_grid, model,feature1,feature2):
                 continue
             plot_dims.append((row, space.dimensions[row]))
         
-        pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        # pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        pdp_samples = space.rvs(n_samples=1000,random_state=123456)
 
         _ ,dim_1 = plot_dims[index1]
         _ ,dim_2 = plot_dims[index2]
         xi, yi, zi = partial_dependence_2D(space, model,
                                                    index1, index2,
                                                    pdp_samples, 40)
+        # if isinstance(dim_1,Categorical):
+        #          xi = np.array(space.dimensions[index1].categories)
+
+        # if isinstance(dim_2,Categorical):
+        #          yi = np.array(space.dimensions[index2].categories)
+        
         
         x = [arr.tolist() for arr in xi]
         y = [arr.tolist() for arr in yi]
@@ -90,7 +101,8 @@ def ComputeALE(param_grid, model):
                 continue
             plot_dims.append((row, space.dimensions[row]))
         print(param_grid)
-        pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        #pdp_samples = space.transform(space.rvs(n_samples=1000,random_state=123456))
+        pdp_samples = space.rvs(n_samples=1000,random_state=123456)
         data = pd.DataFrame(pdp_samples,columns=[n for n in name])
         x_vals = list(param_grid.keys())
         print(data)
@@ -98,6 +110,15 @@ def ComputeALE(param_grid, model):
 
         for i,feat in enumerate(name):
             ale_eff = compute_ALE(data,model,feat,space,pdp_samples,name,include_CI=False, C=0.95)
+            # sample = space.rvs(n_samples=len(ale_eff))
+            # xi = space.transform(sample)
+            # xi[:,i] = ale_eff.index.values
+            # xi = space.inverse_transform(xi)
+            # feature_names = [x[i] for x in xi]
+            # ale_eff.reset_index(inplace=True)
+            # ale_eff[feat] = feature_names
+            # ale_eff.set_index(feat,inplace=True)
+
             dataframes_list.append(ale_eff)
 
         d = json.dumps([df.to_json(orient='split') for df in dataframes_list])
