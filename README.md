@@ -15,7 +15,8 @@ For Pipeline Explanations:
   
 For Model Explanations:
 - PDPlots
-- ALEPlots(in progress)
+- ALEPlots
+- CounterfactualExplanations
 # Setup
 
 ## Download Source Code
