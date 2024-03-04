@@ -72,7 +72,7 @@ def partial_dependence_1D(space, model, i, samples,
         # In case of `x_eval=None` rvs conists of random samples.
         # Calculating the mean of these samples is how partial dependence
         # is implemented.
-        return np.mean(model.predict(rvs_))
+        return np.mean(model.predict(rvs_).astype(float))
     
     if isinstance(space.dimensions[i],Categorical):
         xi = np.array(space.dimensions[i].categories)
@@ -153,7 +153,7 @@ def partial_dependence_2D(space, model, i, j, samples,
         rvs_ = pd.DataFrame(samples)  # copy
         rvs_[j] = x
         rvs_[i] = y
-        return np.mean(model.predict(rvs_))
+        return np.mean(model.predict(rvs_).astype(float))
 
 
     if isinstance(space.dimensions[j],Categorical):
