@@ -25,6 +25,8 @@ from copy import deepcopy
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler,RobustScaler,MinMaxScaler
+from modules.config import config
+import modules.clf_utilities as clf_ut
 
 def transform_grid_plt(param_grid: Dict
                    ) -> Dict:
@@ -82,223 +84,6 @@ def transform_grid(param_grid: Dict
 
     return param_grid_copy
 
-
-
-def plot_2D_PDP(feature1 : str,
-                feature2 : str,
-                features : List,
-                samples : np.ndarray,
-                plot_dims : List,
-                space : skopt.space.space.Space,
-                model : sklearn.gaussian_process._gpr.GaussianProcessRegressor
-                ):
-
-     fig, ax = plt.subplots()
-
-     index1 = features.index(feature1)
-     index2 = features.index(feature2)
-     _ ,dim_1 = plot_dims[index1]
-     _ ,dim_2 = plot_dims[index2]
-
-     xi, yi, zi = partial_dependence_2D(space, model,
-                                                   index1, index2,
-                                                   samples, 40)
-                                                   
-     iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
-     if not iscat[index1]:  # bounds not meaningful for categoricals
-                    ax.set_ylim(*dim_1.bounds)
-     else:
-            ax.yaxis.set_major_locator(MaxNLocator(6, integer=iscat[index1]))
-            ax.yaxis.set_major_formatter(FuncFormatter(
-                        partial(_cat_format, dim_1)))
-     if iscat[index2]:
-                    ax.xaxis.set_major_locator(MaxNLocator(6,integer=iscat[index2]))
-                    # partial() avoids creating closures in a loop
-                    ax.xaxis.set_major_formatter(FuncFormatter(
-                        partial(_cat_format, dim_2)))
-     else:
-                    ax.set_xlim(*dim_2.bounds)
-
-        
-     im = ax.contourf(xi, yi, zi, 10,
-                              cmap='viridis_r')
-     ax.set_xlabel(feature2)
-     ax.set_ylabel(feature1)
-     fig.colorbar(im,label='Accuracy Score')
-
-     
-def plot_PDP_1D(features : List,
-                space : skopt.space.space.Space,
-                samples : np.ndarray ,
-                plot_dims : List,
-                objectives : List,
-                model : List,
-                ):
-    
-    n_dims = len(plot_dims)
-    fig, ax = plt.subplots(n_dims, 1,
-                           figsize=(2 * n_dims, 2 * n_dims))
-
-    fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95,
-                        hspace=0.5, wspace=0.1)
-    
-    if len(objectives) == 1:
-        for i in range(n_dims):
-            index, dim = plot_dims[i]
-            xi, yi = partial_dependence_1D(space, model[0],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi = [round(yi,2) for yi in yi]
-            if n_dims > 1:
-                ax_ = ax[i]
-            else:
-                ax_ = ax
-            iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
-            if not iscat[i]:
-                low, high = dim.bounds
-                ax_.set_xlim(low, high)
-        #     ax_.plot(xi, yi)
-        # else: 
-        #      ax_.bar(xi,yi)
-            ax_.yaxis.tick_left()
-            ax_.yaxis.set_label_position('left')
-            ax_.yaxis.set_ticks_position('both')
-            ax_.xaxis.tick_bottom()
-            ax_.xaxis.set_label_position('bottom')
-            ax_.set_xlabel(dim)
-
-            if dim.prior == 'log-uniform':
-                ax_.set_xscale('log')
-            else:
-                ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[i]))
-            if iscat[i]:
-                ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, dim)))
-            ax_.plot(xi, yi)
-
-            fig.suptitle('Partial Dependence Plots for each Hyperparameter')
-            ax_.set_xlabel(features[i])
-            ax_.set_ylabel(objectives[0])
-    elif len(objectives) == 2:
-        for i in range(n_dims):
-            index, dim = plot_dims[i]
-            xi1, yi1 = partial_dependence_1D(space, model[0],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi1 = [round(yi1,2) for yi1 in yi1]
-
-            xi2, yi2 = partial_dependence_1D(space, model[1],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi2 = [round(yi2,4) for yi2 in yi2]
-            if n_dims > 1:
-                ax_ = ax[i]
-            else:
-                ax_ = ax
-            iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
-            if not iscat[i]:
-                low, high = dim.bounds
-                ax_.set_xlim(low, high)
-        #     ax_.plot(xi, yi)
-        # else: 
-        #      ax_.bar(xi,yi)
-            ax_.yaxis.tick_left()
-            ax_.yaxis.set_label_position('left')
-            ax_.yaxis.set_ticks_position('both')
-            ax_.xaxis.tick_bottom()
-            ax_.xaxis.set_label_position('bottom')
-            ax_.set_xlabel(dim)
-
-            if dim.prior == 'log-uniform':
-                ax_.set_xscale('log')
-            else:
-                ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[i]))
-            if iscat[i]:
-                ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, dim)))
-            ax_.plot(xi1, yi1,label=objectives[0])
-            ax2 = ax_.twinx()
-            ax2.plot(xi2,yi2,'r',label=objectives[1],alpha=0.5)
-            fig.suptitle('Partial Dependence Plots for each Hyperparameter')
-            ax_.set_xlabel(features[i])
-            ax_.set_ylabel(objectives[0])       
-            ax2.set_ylabel(objectives[1])
-            lines, labels = ax_.get_legend_handles_labels()
-            lines2, labels2 = ax2.get_legend_handles_labels()  
-            ax2.legend(lines + lines2, labels + labels2, loc='lower right')     
-    else:
-        for i in range(n_dims):
-            index, dim = plot_dims[i]
-            xi1, yi1 = partial_dependence_1D(space, model[0],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi1 = [round(yi1,2) for yi1 in yi1]
-
-            xi2, yi2 = partial_dependence_1D(space, model[1],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi2 = [round(yi2,4) for yi2 in yi2]
-
-            xi3, yi3 = partial_dependence_1D(space, model[2],
-                                               index,
-                                               samples=samples,
-                                               n_points=40)
-            yi3 = [round(yi3,4) for yi3 in yi3]
-            if n_dims > 1:
-                ax_ = ax[i]
-            else:
-                ax_ = ax
-            iscat = [isinstance(dim[1], Categorical) for dim in plot_dims]
-            if not iscat[i]:
-                low, high = dim.bounds
-                ax_.set_xlim(low, high)
-        #     ax_.plot(xi, yi)
-        # else: 
-        #      ax_.bar(xi,yi)
-            ax_.yaxis.tick_left()
-            ax_.yaxis.set_label_position('left')
-            ax_.yaxis.set_ticks_position('both')
-            ax_.xaxis.tick_bottom()
-            ax_.xaxis.set_label_position('bottom')
-            ax_.set_xlabel(dim)
-
-            if dim.prior == 'log-uniform':
-                ax_.set_xscale('log')
-            else:
-                ax_.xaxis.set_major_locator(MaxNLocator(6, prune='both',
-                                                            integer=iscat[i]))
-            if iscat[i]:
-                ax_.xaxis.set_major_formatter(FuncFormatter(
-                            partial(_cat_format, dim)))
-                
-            ax_.plot(xi1, yi1,label=objectives[0])
-            ax2 = ax_.twinx()
-            ax2.plot(xi2,yi2,'r',label=objectives[1],alpha=0.5)
-            ax3 = ax_.twinx()
-            ax3.plot(xi3,yi3,'g',label=objectives[2],alpha=0.5)
-            ax3.spines.right.set_position(("axes", 1.2))
-
-            fig.suptitle('Partial Dependence Plots for each Hyperparameter')
-
-            ax_.set_xlabel(features[i])
-            ax_.set_ylabel(objectives[0])       
-            ax2.set_ylabel(objectives[1])
-            ax3.set_ylabel(objectives[2])
-            
-
-            lines, labels = ax_.get_legend_handles_labels()
-            lines2, labels2 = ax2.get_legend_handles_labels()  
-            lines3, labels3 = ax3.get_legend_handles_labels()  
-            ax2.legend(lines + lines2 + lines3, labels + labels2 + labels3, loc='lower right')
-
-        
 
 def compute_scaled_datasets(data : DataFrame,
                             scaler : List = None,
@@ -530,8 +315,8 @@ def plot_pdp_2D_grpc(xi,yi,zi,param_grid,feature1,feature2):
         
     im = ax.contourf(xi, yi, zi, 10,
                               cmap='viridis_r')
-    ax.set_xlabel(feature1)
-    ax.set_ylabel(feature2)
+    ax.set_xlabel(feature2)
+    ax.set_ylabel(feature1)
     fig.colorbar(im,label='Accuracy Score')
 
 
@@ -604,7 +389,7 @@ def plot_ale_grpc(data,param_grid):
 def convert_to_float32(train):
     return train.astype(np.float32)
 
-def proxy_model(parameter_grid,optimizer,objective):
+def proxy_model(parameter_grid,optimizer,objective,clf):
 
     param_grid = transform_grid(parameter_grid)
     param_space, name = dimensions_aslists(param_grid)
@@ -642,7 +427,7 @@ def proxy_model(parameter_grid,optimizer,objective):
             ('one_hot', one_hot_encoded_transformer, cat_columns)
         ])
     surrogate_model_accuracy = Pipeline([("preprocessor", preprocessor),
-                            ("Model", LinearRegression())])
+                            ("Model", clf_ut.clf_callable_map[clf].set_params(**clf_ut.clf_hyperparams_map[clf]))])
 
 
     # kernel = ConstantKernel(1.0, (0.01, 1000.0)) \
