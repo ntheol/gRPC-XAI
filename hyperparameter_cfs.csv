@@ -1,0 +1,7 @@
+,Model__learning_rate,Model__max_depth,Model__min_child_weight,Model__n_estimators,preprocessor__num__scaler,BinaryLabel
+Query,0.1,2,1,75,StandardScaler(),1
+Counterfactual,0.001,2,1,73,StandardScaler(),0
+Counterfactual,0.1,10,1,72,StandardScaler(),0
+Counterfactual,0.001,3,1,75,StandardScaler(),0
+Counterfactual,0.1,10,1,60,StandardScaler(),0
+Counterfactual,0.1,8,1,32,StandardScaler(),0

@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
-from skopt.plots import _cat_format,partial_dependence_2D,partial_dependence_1D
+from skopt.plots import _cat_format
 from matplotlib.ticker import MaxNLocator, FuncFormatter  # noqa: E402
 from skopt.space import Categorical,Real,Integer
 from functools import partial
 import numpy as np
-import skopt 
-import sklearn 
+import os 
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
 from pandas import DataFrame
@@ -16,17 +15,18 @@ from typing import List,Dict,Tuple
 from skopt.space import Space
 from modules.optimizer import ModelOptimizer
 import copy
-from sklearn.gaussian_process.kernels import ConstantKernel,Matern
-from sklearn.gaussian_process.kernels import WhiteKernel
-from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
+# from sklearn.gaussian_process.kernels import ConstantKernel,Matern
+# from sklearn.gaussian_process.kernels import WhiteKernel
+# from skopt.learning.gaussian_process.gpr import GaussianProcessRegressor
 from sklearn.svm import SVC
 from sklearn.preprocessing import OneHotEncoder
 from copy import deepcopy
-from sklearn.linear_model import LinearRegression
+# from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler,RobustScaler,MinMaxScaler
 from modules.config import config
 import modules.clf_utilities as clf_ut
+import pickle
 
 def transform_grid_plt(param_grid: Dict
                    ) -> Dict:
@@ -402,12 +402,9 @@ def proxy_model(parameter_grid,optimizer,objective,clf):
     hyperparameters = optimizer.cv_results_['params']
     samples = transform_samples(hyperparameters,space,name)
     # Prepare the hyperparameters and corresponding accuracy scores
-    n_dims = len(space.dimensions)
-    is_cat = space.is_categorical
+
     # Convert hyperparameters to a feature matrix (X) and accuracy scores to a target vector (y)
-    # X = np.array([list(h.values()) for h in hyperparameters])
-    # X = samples
-    # y = np.array(accuracy_scores)
+
     X1 , y1 = gaussian_objective(objective,optimizer,samples)
     cat_columns = X1.select_dtypes(exclude=[np.number]).columns.tolist()
     numeric_columns = X1.select_dtypes(exclude=['object']).columns.tolist()
@@ -453,19 +450,31 @@ def proxy_model(parameter_grid,optimizer,objective,clf):
     # print("Predicted Accuracy Scores:", predicted_scores)
 
 def instance_proxy(X_train,y_train,optimizer, misclassified_instance,params):
-
+    MODELS_DICT_PATH = 'proxy_data_models/cf_trained_models.pkl'
+    try:
+        with open(MODELS_DICT_PATH, 'rb') as f:
+            trained_models = pickle.load(f)
+    except FileNotFoundError:
+        trained_models = {}
     # Creating proxy dataset for each hyperparamet configuration - prediction of test instance
     proxy = pd.DataFrame(columns = ['hyperparameters','BinaryLabel'])
     # Iterate through each hyperparameter combination
-    for params_dict in optimizer.cv_results_['params']:
+    for i,params_dict in enumerate(optimizer.cv_results_['params']):
+        if i in trained_models.keys():
+            mdl = trained_models[i]
+        else:
         # Retrain the model with the current hyperparameters
-        mdl = deepcopy(optimizer.estimator)
-        mdl.set_params(**params_dict)
-        mdl.fit(X_train, y_train)
+            mdl = deepcopy(optimizer.estimator)
+            mdl.set_params(**params_dict)
+            mdl.fit(X_train, y_train)
+            trained_models[i] = mdl
         
         # Make prediction for the misclassified instance
         prediction = mdl.predict(misclassified_instance.to_frame().T)[0]
         proxy = proxy.append({'hyperparameters' : params_dict, 'BinaryLabel': prediction},ignore_index=True)
+    if not os.path.isfile(MODELS_DICT_PATH):
+        with open(MODELS_DICT_PATH, 'wb') as f:
+            pickle.dump(trained_models, f)
     
     keys = list(proxy['hyperparameters'].iloc[0].keys())
 
