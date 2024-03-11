@@ -4,7 +4,7 @@ import pandas as pd
 from skopt.space import Categorical
 
 def partial_dependence_1D(space, model, i, samples,
-                          n_points=40):
+                          n_points=100):
     """
     Calculate the partial dependence for a single dimension.
 
@@ -77,14 +77,17 @@ def partial_dependence_1D(space, model, i, samples,
     if isinstance(space.dimensions[i],Categorical):
         xi = np.array(space.dimensions[i].categories)
     else:
-        xi, xi_transformed = _evenly_sample(space.dimensions[i], 40)    # Calculate the partial dependence for all the points.
+        if pd.DataFrame(samples)[i].nunique() <= n_points:
+            xi = np.sort(pd.DataFrame(samples)[i].unique())
+        else:
+            xi, xi_transformed = _evenly_sample(space.dimensions[i], 40)    # Calculate the partial dependence for all the points.
     yi = [_calc(x) for x in xi]
 
     return xi, yi
 
 
 def partial_dependence_2D(space, model, i, j, samples,
-                          n_points=40):
+                          n_points=100):
     """
     Calculate the partial dependence for two dimensions in the search-space.
 
@@ -159,11 +162,17 @@ def partial_dependence_2D(space, model, i, j, samples,
     if isinstance(space.dimensions[j],Categorical):
         xi = np.array(space.dimensions[j].categories)
     else:
-        xi, xi_transformed = _evenly_sample(space.dimensions[j], 40)
+        if pd.DataFrame(samples)[j].nunique() <= n_points:  
+            xi = np.sort(pd.DataFrame(samples)[j].unique())
+        else:
+            xi, xi_transformed = _evenly_sample(space.dimensions[j], 40)
     if isinstance(space.dimensions[i],Categorical):
         yi = np.array(space.dimensions[i].categories)
     else:
-        yi, yi_transformed = _evenly_sample(space.dimensions[i], 40)
+        if pd.DataFrame(samples)[i].nunique() <= n_points:  
+            yi = np.sort(pd.DataFrame(samples)[i].unique())
+        else:
+            yi, yi_transformed = _evenly_sample(space.dimensions[i], 40)
 
 
     # Calculate the partial dependence for all combinations of these points.

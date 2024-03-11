@@ -33,7 +33,7 @@ def ComputePDP(param_grid, model):
             xi1, yi1 = partial_dependence_1D(space, model,
                                                index,
                                                samples=pdp_samples,
-                                               n_points=40)
+                                               n_points=100)
             # if isinstance(dim,Categorical):
             #      xi1 = np.array(space.dimensions[i].categories)
             xi.append(xi1)
@@ -46,18 +46,15 @@ def ComputePDP(param_grid, model):
 
 def ComputePDP2D(param_grid, model,feature1,feature2):
 
-        features = list(param_grid.keys())
-        index1 = features.index(feature1)
-        index2 = features.index(feature2)
-
-         
-
         param_grid = transform_grid(param_grid)
         param_space, name = dimensions_aslists(param_grid)
         space = Space(param_space)
         space.set_transformer_by_type('normalize',Categorical)
         space.set_transformer_by_type('normalize',Integer)
         space.set_transformer_by_type('normalize',Real)
+        index1 = name.index(feature1)
+        index2 = name.index(feature2)
+
 
         plot_dims = []
         for row in range(space.n_dims):
@@ -72,7 +69,7 @@ def ComputePDP2D(param_grid, model,feature1,feature2):
         _ ,dim_2 = plot_dims[index2]
         xi, yi, zi = partial_dependence_2D(space, model,
                                                    index1, index2,
-                                                   pdp_samples, 40)
+                                                   pdp_samples, 100)
         # if isinstance(dim_1,Categorical):
         #          xi = np.array(space.dimensions[index1].categories)
 
