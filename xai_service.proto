@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+option java_package = "gr.grpc.generated";
 
 service Explanations {
     rpc GetExplanation (stream ExplanationsRequest) returns (ExplanationsResponse);
