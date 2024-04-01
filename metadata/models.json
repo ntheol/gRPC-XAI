@@ -1,0 +1,8 @@
+{
+    "I2Cat_Phising_model" : {
+        "pdp_ale_surrogate_model" : "metadata/proxy_data_models/surrogate_model.pkl",
+        "original_model" : "metadata/proxy_data_models/phising_fullgrid.pkl",
+        "cfs_surrogate_model" : "metadata/proxy_data_models/phising_cfproxy.pkl",
+        "cfs_surrogate_dataset" : "metadata/proxy_data_models/phising_cfdataset.csv"
+    }
+}

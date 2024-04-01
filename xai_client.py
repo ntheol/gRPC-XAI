@@ -4,6 +4,7 @@ import xai_service_pb2
 import xai_service_pb2_grpc
 import io
 import torch
+from modules.lib import transform_grid_plt
 
 class Client():
     def __init__(self):
@@ -16,8 +17,7 @@ class Client():
                 yield xai_service_pb2.ExplanationsRequest(
                     explanation_type=explanation_type,
                     explanation_method = explanation_method,
-                    param_grid=json.dumps(param_grid),
-                    model=model.getvalue(),
+                    model=model,
                     feature1 = feature1,
                     feature2 = feature2
                 )
@@ -28,14 +28,14 @@ class Client():
                     explanation_method = explanation_method,
                     proxy_dataset=proxy_dataset.to_parquet(None),
                     query=query.to_parquet(None),
-                    model=model.getvalue(),
+                    model=model
                 )
             else:
                 yield xai_service_pb2.ExplanationsRequest(
                     explanation_type=explanation_type,
                     explanation_method = explanation_method,
-                    param_grid=json.dumps(param_grid),
-                    model=model.getvalue()
+                    model=model,
+                    feature1=feature1
                 ) 
 
     def generate_dataframe_chunks(self,explanation_type,explanation_method,train_data,model, test_data=None, 
@@ -62,6 +62,24 @@ class Client():
                     except:
                         print("error sending data")
                 print("Stopped Sending")
+
+            # elif explanation_method == 'Counterfactual_Explanations':
+            #     for i in range(0, len(train_data), chunk_size):
+            #         chunk = train_data[i:i + chunk_size]
+            #         chunk_train = train_labels[i:i + chunk_size]
+            #         chunk_data = chunk.to_parquet(None)
+            #         chunk_train = chunk_train.to_parquet(None)  
+            #         try:
+            #             yield xai_service_pb2.ExplanationsRequest(
+            #                 explanation_type=explanation_type,
+            #                 explanation_method = explanation_method,
+            #                 train_data=chunk_data,
+            #                 train_labels = chunk_train,
+            #                 query=query.to_parquet(None),
+            #                 model=model
+            #             )
+            #         except:
+            #             print("error sending data")
         
         elif explanation_type == 'Model':
             if explanation_method == 'PDPlots' or explanation_method=='ALEPlots':
@@ -119,27 +137,28 @@ class Client():
     def get_explanations(self,explanation_type,explanation_method,param_grid=None,model=None,feature1=None,feature2=None,train_data=None,test_data=None,train_labels=None,test_labels=None,num_influential=None,proxy_dataset=None,query=None,features=None,target=None):
 
         # Create a stub for the Explanations service
-        model_bytes = io.BytesIO()
-        torch.save(model, model_bytes)
+        # model_bytes = io.BytesIO()
+        # torch.save(model, model_bytes)
         # Prepare an ExplanationsRequest for ComputePDP
         if explanation_type == 'Pipeline':
             if explanation_method == '2D_PDPlots':
-                explanations_response = self.stub.GetExplanation(self.dummy_stream(explanation_type=explanation_type,explanation_method=explanation_method
-                                                                                ,param_grid=param_grid,model=model_bytes,feature1=feature1,feature2=feature2))
+
+                explanations_response = self.stub.GetExplanation(self.dummy_stream(explanation_type=explanation_type,explanation_method=explanation_method,
+                                                                                model=model,feature1=feature1,feature2=feature2))
 
             elif explanation_method == 'PDPlots' or explanation_method == 'ALEPlots': 
                 explanations_response = self.stub.GetExplanation(self.dummy_stream(explanation_type=explanation_type,explanation_method=explanation_method,
-                                                                                param_grid=param_grid,model=model_bytes))
+                                                                                model=model,feature1=feature1))
             
             elif explanation_method == 'CounterfactualExplanations':
                 explanations_response = self.stub.GetExplanation(self.dummy_stream(explanation_type=explanation_type,explanation_method=explanation_method
-                                                                                ,proxy_dataset=proxy_dataset,query=query,model=model_bytes))
+                                                                                ,proxy_dataset=proxy_dataset,query=query,model=model))
                 
             elif explanation_method == 'InfluenceFunctions':
                 try:    
                     print("Start")
                     response = self.stub.GetExplanation(self.generate_dataframe_chunks(explanation_type=explanation_type,explanation_method=explanation_method,train_data=train_data,
-                                                                                       model=model_bytes, test_data=test_data, train_labels=train_labels,
+                                                                                       model=model, test_data=test_data, train_labels=train_labels,
                                                                                        test_labels=test_labels,num_influential=num_influential))
                 except grpc.RpcError as e:
                     print(f"Error calling StreamDataFrame: {e}")
