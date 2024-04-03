@@ -1,0 +1,17 @@
+{
+    "I2Cat_Phising_model" : {
+        "data" : "metadata/datasets/Risky Behaviour Datasets/phishing_behaviour/min_windows_size_6/desktop_features.pckl",
+        "train" : "metadata/datasets/I2Cat_phising_train.csv",
+        "train_labels" : "metadata/datasets/I2Cat_phising_train_labels.csv",
+        "test" : "metadata/datasets/I2Cat_phising_test.csv",
+        "test_labels" : "metadata/datasets/I2Cat_phising_test_labels.csv"
+    },
+
+    "UNSW_NB15_model" : {
+        "data" : "metadata/datasets/UNSW_NB15.csv",
+        "train" : "metadata/datasets/UNSW_NB15_train.csv",
+        "train_labels" : "metadata/datasets/UNSW_NB15_train_labels.csv",
+        "test" : "metadata/datasets/UNSW_NB15_test.csv",
+        "test_labels" : "metadata/datasets/UNSW_NB15_test_labels.csv"
+    }
+}

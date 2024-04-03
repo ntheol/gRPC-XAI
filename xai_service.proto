@@ -25,25 +25,21 @@ message ExplanationsRequest {
 
     // ----- Influence Functions Fields -----
 
-    bytes train_data = 6;
-    bytes test_data = 7;
-    bytes train_labels = 8;
-    bytes test_labels = 9;
-    int32 num_influential = 10;
+    int32 num_influential = 6;
 
     // ----- Counterfactual Explanation Fields -----
-    bytes proxy_dataset = 11;
-    bytes query = 12;
+    bytes proxy_dataset = 7;
+    bytes query = 8;
 
 //------------------ Model Explainability --------------------------------------------------
 
     // ------------ PDP Fields -------------------------
     // the other same as Pipeline Explainability plus
-    string features = 13;
+    string features = 9;
 
     // ------------ CounterfactualExplanations Fields -------------------------
     // same as Model explainability plus target target label 
-    string target = 14;
+    string target = 10;
 
 
 

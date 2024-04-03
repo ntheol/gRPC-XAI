@@ -14,17 +14,18 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11xai_service.proto\"\xb1\x02\n\x13\x45xplanationsRequest\x12\x18\n\x10\x65xplanation_type\x18\x01 \x01(\t\x12\x1a\n\x12\x65xplanation_method\x18\x02 \x01(\t\x12\r\n\x05model\x18\x03 \x01(\t\x12\x10\n\x08\x66\x65\x61ture1\x18\x04 \x01(\t\x12\x10\n\x08\x66\x65\x61ture2\x18\x05 \x01(\t\x12\x12\n\ntrain_data\x18\x06 \x01(\x0c\x12\x11\n\ttest_data\x18\x07 \x01(\x0c\x12\x14\n\x0ctrain_labels\x18\x08 \x01(\x0c\x12\x13\n\x0btest_labels\x18\t \x01(\x0c\x12\x17\n\x0fnum_influential\x18\n \x01(\x05\x12\x15\n\rproxy_dataset\x18\x0b \x01(\x0c\x12\r\n\x05query\x18\x0c \x01(\x0c\x12\x10\n\x08\x66\x65\x61tures\x18\r \x01(\t\x12\x0e\n\x06target\x18\x0e \x01(\t\"\xf4\x01\n\x14\x45xplanationsResponse\x12\x15\n\rpdp_hp_values\x18\x01 \x01(\t\x12\x12\n\npdp_values\x18\x02 \x01(\t\x12\x10\n\x08pdp2d_xi\x18\x03 \x01(\t\x12\x10\n\x08pdp2d_yi\x18\x04 \x01(\t\x12\x10\n\x08pdp2d_zi\x18\x05 \x01(\t\x12\x10\n\x08\x61le_data\x18\x06 \x01(\t\x12\x12\n\ninfluences\x18\x07 \x03(\x02\x12\x10\n\x08positive\x18\x08 \x01(\x0c\x12\x10\n\x08negative\x18\t \x01(\x0c\x12\x0b\n\x03\x63\x66s\x18\n \x01(\x0c\x12\x10\n\x08pdp_vals\x18\x0b \x01(\t\x12\x12\n\npdp_effect\x18\x0c \x01(\t2O\n\x0c\x45xplanations\x12?\n\x0eGetExplanation\x12\x14.ExplanationsRequest\x1a\x15.ExplanationsResponse(\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11xai_service.proto\"\xdf\x01\n\x13\x45xplanationsRequest\x12\x18\n\x10\x65xplanation_type\x18\x01 \x01(\t\x12\x1a\n\x12\x65xplanation_method\x18\x02 \x01(\t\x12\r\n\x05model\x18\x03 \x01(\t\x12\x10\n\x08\x66\x65\x61ture1\x18\x04 \x01(\t\x12\x10\n\x08\x66\x65\x61ture2\x18\x05 \x01(\t\x12\x17\n\x0fnum_influential\x18\x06 \x01(\x05\x12\x15\n\rproxy_dataset\x18\x07 \x01(\x0c\x12\r\n\x05query\x18\x08 \x01(\x0c\x12\x10\n\x08\x66\x65\x61tures\x18\t \x01(\t\x12\x0e\n\x06target\x18\n \x01(\t\"\xf4\x01\n\x14\x45xplanationsResponse\x12\x15\n\rpdp_hp_values\x18\x01 \x01(\t\x12\x12\n\npdp_values\x18\x02 \x01(\t\x12\x10\n\x08pdp2d_xi\x18\x03 \x01(\t\x12\x10\n\x08pdp2d_yi\x18\x04 \x01(\t\x12\x10\n\x08pdp2d_zi\x18\x05 \x01(\t\x12\x10\n\x08\x61le_data\x18\x06 \x01(\t\x12\x12\n\ninfluences\x18\x07 \x03(\x02\x12\x10\n\x08positive\x18\x08 \x01(\x0c\x12\x10\n\x08negative\x18\t \x01(\x0c\x12\x0b\n\x03\x63\x66s\x18\n \x01(\x0c\x12\x10\n\x08pdp_vals\x18\x0b \x01(\t\x12\x12\n\npdp_effect\x18\x0c \x01(\t2O\n\x0c\x45xplanations\x12?\n\x0eGetExplanation\x12\x14.ExplanationsRequest\x1a\x15.ExplanationsResponse(\x01\x42\x13\n\x11gr.grpc.generatedb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'xai_service_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
-  DESCRIPTOR._options = None
+  _globals['DESCRIPTOR']._options = None
+  _globals['DESCRIPTOR']._serialized_options = b'\n\021gr.grpc.generated'
   _globals['_EXPLANATIONSREQUEST']._serialized_start=22
-  _globals['_EXPLANATIONSREQUEST']._serialized_end=327
-  _globals['_EXPLANATIONSRESPONSE']._serialized_start=330
-  _globals['_EXPLANATIONSRESPONSE']._serialized_end=574
-  _globals['_EXPLANATIONS']._serialized_start=576
-  _globals['_EXPLANATIONS']._serialized_end=655
+  _globals['_EXPLANATIONSREQUEST']._serialized_end=245
+  _globals['_EXPLANATIONSRESPONSE']._serialized_start=248
+  _globals['_EXPLANATIONSRESPONSE']._serialized_end=492
+  _globals['_EXPLANATIONS']._serialized_start=494
+  _globals['_EXPLANATIONS']._serialized_end=573
 # @@protoc_insertion_point(module_scope)
