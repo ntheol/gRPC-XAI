@@ -19,6 +19,7 @@ from modules.ALE_generic import ale
 import joblib
 import io
 
+
 class MyExplanationsService(ExplanationsServicer):
 
     def GetExplanation(self, request_iterator, context):
@@ -219,8 +220,14 @@ class MyExplanationsService(ExplanationsServicer):
                     # Using method=random for generating CFs
                     exp = dice_ml.Dice(d, m, method="random")
                     e1 = exp.generate_counterfactuals(query, total_CFs=5, desired_class="opposite",sample_size=5000)
-                    e1.visualize_as_dataframe(show_only_changes=True)
+                    #e1.visualize_as_dataframe(show_only_changes=True)
                     cfs = e1.cf_examples_list[0].final_cfs_df
+                    dtypes_dict = proxy_dataset.drop(columns='BinaryLabel').dtypes.to_dict()
+                    for col, dtype in dtypes_dict.items():
+                        cfs[col] = cfs[col].astype(dtype)
+                    scaled_query, scaled_cfs = min_max_scale(proxy_dataset=proxy_dataset,factual=query.copy(deep=True),counterfactuals=cfs.copy(deep=True))
+                    cfs['Cost'] = cf_difference(scaled_query, scaled_cfs)
+                    cfs = cfs.sort_values(by='Cost')
                     cfs = cfs.to_parquet(None)
 
                     return xai_service_pb2.ExplanationsResponse(

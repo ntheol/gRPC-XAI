@@ -510,3 +510,70 @@ def instance_proxy(X_train,y_train,optimizer, misclassified_instance,params):
     proxy_model = proxy_model.fit(proxy_dataset.drop(columns='BinaryLabel'), proxy_dataset['BinaryLabel'])
 
     return proxy_model , proxy_dataset
+
+
+def min_max_scale(proxy_dataset,factual,counterfactuals):
+    scaler = MinMaxScaler()
+    dtypes_dict = counterfactuals.drop(columns='BinaryLabel').dtypes.to_dict()
+    # Change data types of columns in factual based on dtypes of counterfactual
+    for col, dtype in dtypes_dict.items():
+        factual[col] = factual[col].astype(dtype)
+        
+    
+#pd.concat([factual,counterfactuals])
+    for feat in proxy_dataset.drop(columns='BinaryLabel').select_dtypes(include='number').columns.tolist():
+        scaler.fit(proxy_dataset.drop(columns='BinaryLabel')[feat].values.reshape(-1,1))
+        #scaler.fit(pd.concat([factual,counterfactuals]).drop(columns='BinaryLabel')[feat].values.reshape(-1,1))
+        scaled_data = scaler.transform(factual[feat].values.reshape(-1,1))
+        factual[feat] = scaled_data
+        scaled_data = scaler.transform(counterfactuals[feat].values.reshape(-1,1))
+        counterfactuals[feat] = scaled_data
+
+    return factual,counterfactuals
+
+def cf_difference(base_model, cf_df):
+    """
+    Calculate the difference between the base model and each row of the provided counterfactual DataFrame.
+    
+    Parameters:
+    - base_model: DataFrame, representing the base model with hyperparameters
+    - cf_df: DataFrame, representing the counterfactual DataFrame with hyperparameters
+    
+    Returns:
+    - DataFrame with differences added as a new column
+    """
+    differences = []
+    
+    # Ensure the base_model DataFrame has only one row
+    if len(base_model) != 1:
+        raise ValueError("Base model DataFrame must have exactly one row.")
+
+    # Get the single row of the base model
+    base_row = base_model.iloc[0]
+    
+    # Iterate over each row in the counterfactual DataFrame
+    for index, row in cf_df.iterrows():
+        difference = 0
+        
+        # Iterate over each column in the counterfactual DataFrame
+        for column, value in row.iteritems():
+            # Exclude 'BinaryLabel' column
+            if column == 'BinaryLabel':
+                continue
+            
+            # Check if the column is numerical
+            try:
+                # Compute the absolute difference for numerical columns
+                difference += abs(value - base_row[column])
+            except:
+                # For categorical values, difference is 1 if they are different
+                if str(value) != str(base_row[column]):
+                    difference += 1
+                    
+        # Append the difference for the current row
+        differences.append(difference)
+    
+    # Add the differences as a new column in the counterfactual DataFrame
+    cf_df['Difference'] = differences
+    
+    return cf_df['Difference']
