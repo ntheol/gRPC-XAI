@@ -63,11 +63,11 @@ message ExplanationsResponse {
 
     // Fields specific to InfluenceFunction explanation
     repeated float influences = 7;
-    bytes positive = 8;
-    bytes negative = 9;
+    string positive = 8;
+    string negative = 9;
 
     // Fields specific to Counterfactual Explanations
-    bytes cfs = 10;
+    string cfs = 10;
 
 //------------------ Model Explainability --------------------------------------------------
     // ------------ PDP Fields -------------------------

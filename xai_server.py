@@ -168,7 +168,7 @@ class MyExplanationsService(ExplanationsServicer):
 
 
                     influences = influences.flatten().tolist()
-                    positive = positive.to_parquet(None)
+                    positive = positive.to_json(orient='records')
                     negative = negative.to_parquet(None)
                         # Create a response message
                     response = xai_service_pb2.ExplanationsResponse(influences=influences,positive=positive,negative = negative)
@@ -228,7 +228,7 @@ class MyExplanationsService(ExplanationsServicer):
                     scaled_query, scaled_cfs = min_max_scale(proxy_dataset=proxy_dataset,factual=query.copy(deep=True),counterfactuals=cfs.copy(deep=True))
                     cfs['Cost'] = cf_difference(scaled_query, scaled_cfs)
                     cfs = cfs.sort_values(by='Cost')
-                    cfs = cfs.to_parquet(None)
+                    cfs = cfs.to_json(orient='records')
 
                     return xai_service_pb2.ExplanationsResponse(
                         cfs=cfs
@@ -313,7 +313,7 @@ class MyExplanationsService(ExplanationsServicer):
                     e1.visualize_as_dataframe(show_only_changes=True)
                     cfs = e1.cf_examples_list[0].final_cfs_df
                     display(cfs)
-                    cfs = cfs.to_parquet(None)
+                    cfs = cfs.to_json(orient='records')
 
                     return xai_service_pb2.ExplanationsResponse(
                         cfs=cfs

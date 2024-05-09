@@ -72,8 +72,11 @@ def transform_grid(param_grid: Dict
                 mins = param_grid_copy[key][0]
                 maxs = param_grid_copy[key][1]
                 param_grid_copy[key] = Real(mins,maxs,prior='log-uniform',transform='normalize')
+            elif type(param_grid_copy[key][0]) == float:
+                mins = min(param_grid_copy[key])
+                maxs = max(param_grid_copy[key])
+                param_grid_copy[key] = Real(mins,maxs,prior='uniform',transform='normalize')
             else:
-
                 mins = min(param_grid_copy[key])
                 maxs = max(param_grid_copy[key])
                 param_grid_copy[key] = Integer(mins,maxs,prior='uniform',transform='normalize')
