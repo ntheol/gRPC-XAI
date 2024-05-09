@@ -62,17 +62,17 @@ message ExplanationsResponse {
     string ale_data = 6;
 
     // Fields specific to InfluenceFunction explanation
-    repeated float influences = 7;
-    string positive = 8;
-    string negative = 9;
+    //repeated float influences = 7;
+    string positive = 7;
+    string negative = 8;
 
     // Fields specific to Counterfactual Explanations
-    string cfs = 10;
+    string cfs = 9;
 
 //------------------ Model Explainability --------------------------------------------------
     // ------------ PDP Fields -------------------------
-    string pdp_vals = 11;
-    string pdp_effect = 12;
+    string pdp_vals = 10;
+    string pdp_effect = 11;
 
 
 }

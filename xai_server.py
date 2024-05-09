@@ -167,11 +167,11 @@ class MyExplanationsService(ExplanationsServicer):
 
 
 
-                    influences = influences.flatten().tolist()
+                    #influences = influences.flatten().tolist()
                     positive = positive.to_json(orient='records')
-                    negative = negative.to_parquet(None)
+                    negative = negative.to_json(orient='records')
                         # Create a response message
-                    response = xai_service_pb2.ExplanationsResponse(influences=influences,positive=positive,negative = negative)
+                    response = xai_service_pb2.ExplanationsResponse(positive=positive,negative = negative)
 
                     return response
                 elif explanation_method == 'CounterfactualExplanations':  

@@ -219,7 +219,7 @@ class Client():
             elif explanation_method == 'CounterfactualExplanations':
                 return explanations_response.cfs
             if explanation_method== 'InfluenceFunctions':
-                return response.influences, response.positive, response.negative
+                return response.positive, response.negative
             
         elif explanation_type == 'Model':
             if explanation_method == 'PDPlots' or explanation_method=='ALEPlots':
