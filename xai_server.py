@@ -55,10 +55,35 @@ class MyExplanationsService(ExplanationsServicer):
                         joblib.dump(surrogate_model, models[model_id]['pdp_ale_surrogate_model'])                   
  
                     x,y = ComputePDP(param_grid=param_grid, model=surrogate_model, feature=feature)
+                    if type(x[0][0]) == str:
+                        axis_type='categorical' 
+                    else: axis_type = 'numerical'
 
                     return xai_service_pb2.ExplanationsResponse(
-                        pdp_hp_values=json.dumps(x),
-                        pdp_values=json.dumps(y)
+                        explainability_type = explanation_type,
+                        explanation_method = explanation_method,
+                        explainability_model = model_id,
+                        plot_name = 'Partial Dependece Plot (PDP)',
+                        plot_descr = "fegcvd",
+                        plot_type = 'LinePlot',
+                        features = xai_service_pb2.Features(
+                                    feature1=feature, 
+                                    feature2=''),
+                        xAxis = xai_service_pb2.Axis(
+                                    axis_name='Hyperparameter Values', 
+                                    axis_values=[str(value) for value in x[0]], 
+                                    axis_type=axis_type  
+                        ),
+                        yAxis = xai_service_pb2.Axis(
+                                    axis_name='PDP Values', 
+                                    axis_values=[str(value) for value in y[0]], 
+                                    axis_type='numerical'
+                        ),
+                        zAxis = xai_service_pb2.Axis(
+                                    axis_name='', 
+                                    axis_values='', 
+                                    axis_type=''                    
+                        )
                     )
 
                 elif explanation_method == '2D_PDPlots':
@@ -85,9 +110,30 @@ class MyExplanationsService(ExplanationsServicer):
                     x,y,z = ComputePDP2D(param_grid=param_grid, model=surrogate_model,feature1=feature1,feature2=feature2)
 
                     return xai_service_pb2.ExplanationsResponse(
-                        pdp2d_xi=json.dumps(x),
-                        pdp2d_yi=json.dumps(y),
-                        pdp2d_zi=json.dumps(z)
+                        explainability_type = explanation_type,
+                        explanation_method = explanation_method,
+                        explainability_model = model_id,
+                        plot_name = '2D-Partial Dependece Plot (PDP)',
+                        plot_descr = "fegcvd",
+                        plot_type = 'ContourPlot',
+                        features = xai_service_pb2.Features(
+                                    feature1=feature2, 
+                                    feature2=feature2),
+                        xAxis = xai_service_pb2.Axis(
+                                    axis_name='Hyperparameter1 Values', 
+                                    axis_values=[str(value) for value in x], 
+                                    axis_type='categorical' if isinstance(x[0], str) else 'numerical'
+                        ),
+                        yAxis = xai_service_pb2.Axis(
+                                    axis_name='Hyperparameter2 Values', 
+                                    axis_values=[str(value) for value in y], 
+                                    axis_type='categorical' if isinstance(y[0], str) else 'numerical'
+                        ),
+                        zAxis = xai_service_pb2.Axis(
+                                    axis_name='', 
+                                    axis_values=[str(value) for value in z], 
+                                    axis_type='numerical'                    
+                        )
                     )
 
                 elif explanation_method == 'ALEPlots':
@@ -111,10 +157,32 @@ class MyExplanationsService(ExplanationsServicer):
                         surrogate_model = proxy_model(param_grid,original_model,'accuracy','XGBoostRegressor')
                         joblib.dump(surrogate_model, models[model_id]['pdp_ale_surrogate_model'])  
 
-                    d = ComputeALE(param_grid=param_grid, model=surrogate_model, feature=feature)
-
+                    ale_eff = ComputeALE(param_grid=param_grid, model=surrogate_model, feature=feature)
                     return xai_service_pb2.ExplanationsResponse(
-                        ale_data=d  # Replace with actual data
+                        explainability_type = explanation_type,
+                        explanation_method = explanation_method,
+                        explainability_model = model_id,
+                        plot_name = 'Accumulated Local Effects Plot (ALE)',
+                        plot_descr = "fegcvd",
+                        plot_type = 'LinePLot',
+                        features = xai_service_pb2.Features(
+                                    feature1=feature, 
+                                    feature2=''),
+                        xAxis = xai_service_pb2.Axis(
+                                    axis_name='Hyperparameter1 Values', 
+                                    axis_values=[str(value) for value in ale_eff.index.tolist()], 
+                                    axis_type='categorical' if isinstance(ale_eff.index.tolist()[0], str) else 'numerical'
+                        ),
+                        yAxis = xai_service_pb2.Axis(
+                                    axis_name='Hyperparameter2 Values', 
+                                    axis_values=[str(value) for value in ale_eff.eff.tolist()], 
+                                    axis_type='categorical' if isinstance(ale_eff.eff.tolist()[0], str) else 'numerical'
+                        ),
+                        zAxis = xai_service_pb2.Axis(
+                                    axis_name='', 
+                                    axis_values='', 
+                                    axis_type=''                    
+                        )
                     )
 
                 elif explanation_method == 'InfluenceFunctions':  
@@ -167,11 +235,11 @@ class MyExplanationsService(ExplanationsServicer):
 
 
 
-                    #influences = influences.flatten().tolist()
-                    positive = positive.to_json(orient='records')
-                    negative = negative.to_json(orient='records')
+                    influences = influences.flatten().tolist()
+                    positive = positive.to_parquet(None)
+                    negative = negative.to_parquet(None)
                         # Create a response message
-                    response = xai_service_pb2.ExplanationsResponse(positive=positive,negative = negative)
+                    response = xai_service_pb2.ExplanationsResponse(influences=influences,positive=positive,negative = negative)
 
                     return response
                 elif explanation_method == 'CounterfactualExplanations':  
@@ -228,7 +296,7 @@ class MyExplanationsService(ExplanationsServicer):
                     scaled_query, scaled_cfs = min_max_scale(proxy_dataset=proxy_dataset,factual=query.copy(deep=True),counterfactuals=cfs.copy(deep=True))
                     cfs['Cost'] = cf_difference(scaled_query, scaled_cfs)
                     cfs = cfs.sort_values(by='Cost')
-                    cfs = cfs.to_json(orient='records')
+                    cfs = cfs.to_parquet(None)
 
                     return xai_service_pb2.ExplanationsResponse(
                         cfs=cfs
@@ -313,7 +381,7 @@ class MyExplanationsService(ExplanationsServicer):
                     e1.visualize_as_dataframe(show_only_changes=True)
                     cfs = e1.cf_examples_list[0].final_cfs_df
                     display(cfs)
-                    cfs = cfs.to_json(orient='records')
+                    cfs = cfs.to_parquet(None)
 
                     return xai_service_pb2.ExplanationsResponse(
                         cfs=cfs

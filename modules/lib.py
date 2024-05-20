@@ -174,7 +174,6 @@ def dimensions_aslists(search_space : Dict
     return params_space_list,name
 
 def transform_samples(hyperparameters : List[Dict],
-                      space : Space,
                       name: List
                       ) -> np.ndarray:
     rearranged_list = []
@@ -396,14 +395,10 @@ def proxy_model(parameter_grid,optimizer,objective,clf):
 
     param_grid = transform_grid(parameter_grid)
     param_space, name = dimensions_aslists(param_grid)
-    space = Space(param_space)
 
-    # space.set_transformer_by_type('normalize',Categorical)
-    # space.set_transformer_by_type('normalize',Integer)
-    # space.set_transformer_by_type('normalize',Real)
 
     hyperparameters = optimizer.cv_results_['params']
-    samples = transform_samples(hyperparameters,space,name)
+    samples = transform_samples(hyperparameters,name)
     # Prepare the hyperparameters and corresponding accuracy scores
 
     # Convert hyperparameters to a feature matrix (X) and accuracy scores to a target vector (y)

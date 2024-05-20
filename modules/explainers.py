@@ -108,8 +108,8 @@ def ComputeALE(param_grid, model,feature):
             # ale_eff[feat] = feature_names
             # ale_eff.set_index(feat,inplace=True)
 
-        dataframes_list.append(ale_eff)
+        # dataframes_list.append(ale_eff)
 
-        d = json.dumps([df.to_json(orient='split') for df in dataframes_list])
+        # d = json.dumps([df.to_json(orient='split') for df in dataframes_list])
 
-        return d
+        return ale_eff

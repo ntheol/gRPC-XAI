@@ -4,8 +4,34 @@ option java_package = "gr.grpc.generated";
 
 service Explanations {
     rpc GetExplanation (stream ExplanationsRequest) returns (ExplanationsResponse);
+    rpc Initialization (InitializationRequest) returns (InitializationResponse);
 }
 
+
+message InitializationRequest {
+    string model_name = 1;
+}
+
+message TableModel {
+    ExplanationsResponse content = 1;
+}
+
+message Model {
+    repeated string feature_names = 1;
+    map <string,ExplanationsResponse> plots = 2;
+    map <string,TableModel> tables = 3;
+}
+
+message InitializationResponse {
+    Model model = 1;
+    Pipeline pipeline = 2;
+}
+
+message Pipeline {
+    repeated string hyperparameter_names = 1;
+    map <string,ExplanationsResponse> plots = 2;
+    map <string,TableModel> tables = 3;
+}
 
 // ----------------- Explanations Fields ----------------------------
 
@@ -46,35 +72,28 @@ message ExplanationsRequest {
     // Include other fields if needed based on the chosen explanation type
 }
 
-message ExplanationsResponse {
-//------------------ Pipeline Explainability --------------------------------------------------
 
-    // Fields specific to ComputePDP explanation
-    string pdp_hp_values = 1;
-    string pdp_values = 2;
-
-    // Fields specific to ComputePDP2D explanation
-    string pdp2d_xi = 3;
-    string pdp2d_yi = 4;
-    string pdp2d_zi = 5;
-
-    // Fields specific to ComputeALE explanation
-    string ale_data = 6;
-
-    // Fields specific to InfluenceFunction explanation
-    //repeated float influences = 7;
-    string positive = 7;
-    string negative = 8;
-
-    // Fields specific to Counterfactual Explanations
-    string cfs = 9;
-
-//------------------ Model Explainability --------------------------------------------------
-    // ------------ PDP Fields -------------------------
-    string pdp_vals = 10;
-    string pdp_effect = 11;
-
-
+ message Features {
+    string feature1 = 1;
+    string feature2 = 2;
 }
 
+message Axis {
+    string axis_name = 1;
+    repeated string axis_values= 2;
+    string axis_type = 3;
+}
 
+message ExplanationsResponse {
+    string explainability_type = 1;
+    string explanation_method = 2;
+    string explainability_model = 3;
+    string plot_name = 4;
+    string plot_descr = 5;
+    string plot_type = 6;
+    Features features = 7;
+    Axis xAxis = 8;
+    Axis yAxis = 9;
+    Axis zAxis = 10; 
+    //map<string, repeated string> table_contents= 11;
+}

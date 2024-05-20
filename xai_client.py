@@ -211,15 +211,15 @@ class Client():
 
             # Make a gRPC call to the Explanations service
             if explanation_method == 'PDPlots':
-                return explanations_response.pdp_hp_values, explanations_response.pdp_values
+                return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
             elif explanation_method == 'ALEPlots' :
-                return explanations_response.ale_data
+                return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
             elif explanation_method == '2D_PDPlots':
-                return explanations_response.pdp2d_xi, explanations_response.pdp2d_yi, explanations_response.pdp2d_zi
+                return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis,explanations_response.zAxis
             elif explanation_method == 'CounterfactualExplanations':
                 return explanations_response.cfs
             if explanation_method== 'InfluenceFunctions':
-                return response.positive, response.negative
+                return response.influences, response.positive, response.negative
             
         elif explanation_type == 'Model':
             if explanation_method == 'PDPlots' or explanation_method=='ALEPlots':
@@ -238,7 +238,7 @@ class Client():
 
             
             if explanation_method == 'PDPlots' or explanation_method == '2D_PDPlots':
-                return explanations_response.pdp_vals, explanations_response.pdp_effect
+                return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
             elif explanation_method == 'CounterfactualExplanations':
                 return explanations_response.cfs
             elif explanation_method == 'ALEPlots':
