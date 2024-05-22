@@ -14,7 +14,7 @@ class ExplanationsStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetExplanation = channel.stream_unary(
+        self.GetExplanation = channel.unary_unary(
                 '/Explanations/GetExplanation',
                 request_serializer=xai__service__pb2.ExplanationsRequest.SerializeToString,
                 response_deserializer=xai__service__pb2.ExplanationsResponse.FromString,
@@ -29,7 +29,7 @@ class ExplanationsStub(object):
 class ExplanationsServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetExplanation(self, request_iterator, context):
+    def GetExplanation(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,7 +44,7 @@ class ExplanationsServicer(object):
 
 def add_ExplanationsServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetExplanation': grpc.stream_unary_rpc_method_handler(
+            'GetExplanation': grpc.unary_unary_rpc_method_handler(
                     servicer.GetExplanation,
                     request_deserializer=xai__service__pb2.ExplanationsRequest.FromString,
                     response_serializer=xai__service__pb2.ExplanationsResponse.SerializeToString,
@@ -65,7 +65,7 @@ class Explanations(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetExplanation(request_iterator,
+    def GetExplanation(request,
             target,
             options=(),
             channel_credentials=None,
@@ -75,7 +75,7 @@ class Explanations(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_unary(request_iterator, target, '/Explanations/GetExplanation',
+        return grpc.experimental.unary_unary(request, target, '/Explanations/GetExplanation',
             xai__service__pb2.ExplanationsRequest.SerializeToString,
             xai__service__pb2.ExplanationsResponse.FromString,
             options, channel_credentials,

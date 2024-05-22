@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_package = "gr.grpc.generated";
 
 service Explanations {
-    rpc GetExplanation (stream ExplanationsRequest) returns (ExplanationsResponse);
+    rpc GetExplanation (ExplanationsRequest) returns (ExplanationsResponse);
     rpc Initialization (InitializationRequest) returns (InitializationResponse);
 }
 
@@ -12,25 +12,22 @@ message InitializationRequest {
     string model_name = 1;
 }
 
-message TableModel {
-    ExplanationsResponse content = 1;
-}
 
-message Model {
+message Feature_Explanation {
     repeated string feature_names = 1;
     map <string,ExplanationsResponse> plots = 2;
-    map <string,TableModel> tables = 3;
+    map <string,ExplanationsResponse> tables = 3;
 }
 
 message InitializationResponse {
-    Model model = 1;
-    Pipeline pipeline = 2;
+    Feature_Explanation feature_explanation = 1;
+    Hyperparameter_Explanation hyperparameter_explanation = 2;
 }
 
-message Pipeline {
+message Hyperparameter_Explanation {
     repeated string hyperparameter_names = 1;
     map <string,ExplanationsResponse> plots = 2;
-    map <string,TableModel> tables = 3;
+    map <string,ExplanationsResponse> tables = 3;
 }
 
 // ----------------- Explanations Fields ----------------------------
@@ -84,6 +81,10 @@ message Axis {
     string axis_type = 3;
 }
 
+message TableContents {
+    repeated string values = 1;
+}
+
 message ExplanationsResponse {
     string explainability_type = 1;
     string explanation_method = 2;
@@ -95,5 +96,5 @@ message ExplanationsResponse {
     Axis xAxis = 8;
     Axis yAxis = 9;
     Axis zAxis = 10; 
-    //map<string, repeated string> table_contents= 11;
+    map<string, TableContents> table_contents= 11;
 }
