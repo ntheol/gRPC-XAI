@@ -609,7 +609,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                     plot_descr = "PD (Partial Dependence) Plots show how a feature affects a model's predictions, holding other features constant, to illustrate feature impact.",
                                                     plot_type = 'LinePLot',
                                                     features = xai_service_pb2.Features(
-                                                                feature1=list(param_grid.keys())[0], 
+                                                                feature1=features, 
                                                                 feature2=''),
                                                     xAxis = xai_service_pb2.Axis(
                                                                 axis_name='Feature Values', 
@@ -630,7 +630,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                     plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
                                                     plot_type = 'LinePLot',
                                                     features = xai_service_pb2.Features(
-                                                                feature1=list(param_grid.keys())[0], 
+                                                                feature1=features, 
                                                                 feature2=''),
                                                     xAxis = xai_service_pb2.Axis(
                                                                 axis_name='Feature Values', 
@@ -695,13 +695,13 @@ class MyExplanationsService(ExplanationsServicer):
                                                                 feature2=list(param_grid.keys())[1]),
                                                     xAxis = xai_service_pb2.Axis(
                                                                 axis_name='Hyperparameter1 Values', 
-                                                                axis_values=[str(value) for value in x2d], 
-                                                                axis_type='categorical' if isinstance(x2d[0], str) else 'numerical'
+                                                                axis_values=[str(value) for value in y2d], 
+                                                                axis_type='categorical' if isinstance(y2d[0], str) else 'numerical'
                                                     ),
                                                     yAxis = xai_service_pb2.Axis(
                                                                 axis_name='Hyperparameter2 Values', 
-                                                                axis_values=[str(value) for value in y2d], 
-                                                                axis_type='categorical' if isinstance(y2d[0], str) else 'numerical'
+                                                                axis_values=[str(value) for value in x2d], 
+                                                                axis_type='categorical' if isinstance(x2d[0], str) else 'numerical'
                                                     ),
                                                     zAxis = xai_service_pb2.Axis(
                                                                 axis_name='', 
@@ -717,7 +717,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                     plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
                                                     plot_type = 'LinePLot',
                                                     features = xai_service_pb2.Features(
-                                                                feature1=features, 
+                                                                feature1=list(param_grid.keys())[0], 
                                                                 feature2=''),
                                                     xAxis = xai_service_pb2.Axis(
                                                                 axis_name='Hyperparameter1 Values', 
