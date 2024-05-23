@@ -33,9 +33,9 @@ class MyExplanationsService(ExplanationsServicer):
         explanation_type = request.explanation_type
         explanation_method = request.explanation_method
 
-        if explanation_type == 'Pipeline':
+        if explanation_type == 'HyperparameterExplanation':
 
-            if explanation_method == 'PDPlots':
+            if explanation_method == 'pdp':
                 feature = request.feature1
                 model_id = request.model
                 try:
@@ -86,7 +86,7 @@ class MyExplanationsService(ExplanationsServicer):
                     )
                 )
 
-            elif explanation_method == '2D_PDPlots':
+            elif explanation_method == '2dpdp':
 
                 feature1 = request.feature1
                 feature2 = request.feature2
@@ -114,7 +114,7 @@ class MyExplanationsService(ExplanationsServicer):
                     explanation_method = explanation_method,
                     explainability_model = model_id,
                     plot_name = '2D-Partial Dependece Plot (PDP)',
-                    plot_descr = "fegcvd",
+                    plot_descr = "2D-PD plots visualize how the model's accuracy changes when two hyperparameters vary.",
                     plot_type = 'ContourPlot',
                     features = xai_service_pb2.Features(
                                 feature1=feature2, 
@@ -136,7 +136,7 @@ class MyExplanationsService(ExplanationsServicer):
                     )
                 )
 
-            elif explanation_method == 'ALEPlots':
+            elif explanation_method == 'ale':
 
 
                 feature = request.feature1
@@ -163,7 +163,7 @@ class MyExplanationsService(ExplanationsServicer):
                     explanation_method = explanation_method,
                     explainability_model = model_id,
                     plot_name = 'Accumulated Local Effects Plot (ALE)',
-                    plot_descr = "fegcvd",
+                    plot_descr = "ALE Plots illustrate the effect of a single hyperparameter on the accuracy of a machine learning model.",
                     plot_type = 'LinePLot',
                     features = xai_service_pb2.Features(
                                 feature1=feature, 
@@ -185,7 +185,7 @@ class MyExplanationsService(ExplanationsServicer):
                     )
                 )
 
-            elif explanation_method == 'InfluenceFunctions':  
+            elif explanation_method == 'influenceFunctions':  
                 # chunk_df = pd.read_parquet(io.BytesIO(request.train_data))  # Deserialize DataFrame chunk
                 # dataframe = pd.concat([dataframe, chunk_df], ignore_index=True)
 
@@ -240,7 +240,7 @@ class MyExplanationsService(ExplanationsServicer):
                 response = xai_service_pb2.ExplanationsResponse(influences=influences,positive=positive,negative = negative)
 
                 return response
-            elif explanation_method == 'CounterfactualExplanations':  
+            elif explanation_method == 'counterfactuals':  
                 print("receiving")
 
                 model_id = request.model
@@ -253,13 +253,13 @@ class MyExplanationsService(ExplanationsServicer):
 
                 try:
                     with open(models[model_id]['cfs_surrogate_model'], 'rb') as f:
-                        proxy_model = joblib.load(f)
+                        surrogate_model = joblib.load(f)
                         proxy_dataset = pd.read_csv(models[model_id]['cfs_surrogate_dataset'],index_col=0)
                 except FileNotFoundError:
                     print("Surrogate model does not exist. Training new surrogate model") 
                     train = pd.read_csv(data[model_id]['train'],index_col=0) 
                     train_labels = pd.read_csv(data[model_id]['train_labels'],index_col=0) 
-                    proxy_model , proxy_dataset = instance_proxy(train,train_labels,original_model, query,original_model.param_grid)
+                    surrogate_model , proxy_dataset = instance_proxy(train,train_labels,original_model, query,original_model.param_grid)
                     joblib.dump(surrogate_model, models[model_id]['cfs_surrogate_model'])  
                     proxy_dataset.to_csv(models[model_id]['cfs_surrogate_dataset'])
                 param_grid = transform_grid(original_model.param_grid)
@@ -282,7 +282,7 @@ class MyExplanationsService(ExplanationsServicer):
                     , outcome_name='BinaryLabel')
                 
                 # Using sklearn backend
-                m = dice_ml.Model(model=proxy_model, backend="sklearn")
+                m = dice_ml.Model(model=surrogate_model, backend="sklearn")
                 # Using method=random for generating CFs
                 exp = dice_ml.Dice(d, m, method="random")
                 e1 = exp.generate_counterfactuals(query, total_CFs=5, desired_class="opposite",sample_size=5000)
@@ -303,13 +303,13 @@ class MyExplanationsService(ExplanationsServicer):
                     explanation_method = explanation_method,
                     explainability_model = model_id,
                     plot_name = 'Counterfactual Explanations',
-                    plot_descr = "fegcvd",
+                    plot_descr = "Counterfactual Explanations identify the minimal changes on hyperparameter values in order to correctly classify a given missclassified instance.",
                     plot_type = 'Table',
                     table_contents = {col: xai_service_pb2.TableContents(values=cfs[col].astype(str).tolist()) for col in cfs.columns}
                 )
-        elif explanation_type == 'Model':
+        elif explanation_type == 'FeatureExplanation':
 
-            if explanation_method == 'PDPlots' :
+            if explanation_method == 'pdp' :
                 print('Receiving')
 
                 model_id = request.model
@@ -386,7 +386,7 @@ class MyExplanationsService(ExplanationsServicer):
             #                 pdp_effect=json.dumps(pdp['average'].tolist())
             #     )
             
-            elif explanation_method == 'CounterfactualExplanations':
+            elif explanation_method == 'counterfactuals':
                 model_id = request.model
                 try:
                     with open(models[model_id]['original_model'], 'rb') as f:
@@ -418,12 +418,12 @@ class MyExplanationsService(ExplanationsServicer):
                     explanation_method = explanation_method,
                     explainability_model = model_id,
                     plot_name = 'Counterfactual Explanations',
-                    plot_descr = "fegcvd",
+                    plot_descr = "Counterfactual Explanations identify the minimal changes needed to alter a machine learning model's prediction for a given instance.",
                     plot_type = 'Table',
                     table_contents = {col: xai_service_pb2.TableContents(values=cfs[col].astype(str).tolist()) for col in cfs.columns}
                 )
             
-            elif explanation_method == 'ALEPlots':
+            elif explanation_method == 'ale':
                 model_id = request.model
                 try:
                     with open(models[model_id]['original_model'], 'rb') as f:
@@ -443,7 +443,7 @@ class MyExplanationsService(ExplanationsServicer):
                     explanation_method = explanation_method,
                     explainability_model = model_id,
                     plot_name = 'Accumulated Local Effects Plot (ALE)',
-                    plot_descr = "fegcvd",
+                    plot_descr = "ALE plots illustrate the effect of a single feature on the predicted outcome of a machine learning model.",
                     plot_type = 'LinePLot',
                     features = xai_service_pb2.Features(
                                 feature1=features, 
@@ -602,8 +602,8 @@ class MyExplanationsService(ExplanationsServicer):
             feature_explanation = xai_service_pb2.Feature_Explanation(
                                     feature_names=train.columns.tolist(),
                                     plots={'pdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'Feature Explanation',
-                                                    explanation_method = 'PDPlots',
+                                                    explainability_type = 'FeatureExplanation',
+                                                    explanation_method = 'pdp',
                                                     explainability_model = model_id,
                                                     plot_name = 'Partial Dependece Plot (PDP)',
                                                     plot_descr = "PD (Partial Dependence) Plots show how a feature affects a model's predictions, holding other features constant, to illustrate feature impact.",
@@ -623,11 +623,11 @@ class MyExplanationsService(ExplanationsServicer):
                                                     ),
                                                 ),
                                             'ale': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'Feature Explanation',
-                                                    explanation_method = 'ALEPlots',
+                                                    explainability_type = 'FeatureExplanation',
+                                                    explanation_method = 'ale',
                                                     explainability_model = model_id,
                                                     plot_name = 'Accumulated Local Effects Plot (ALE)',
-                                                    plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
+                                                    plot_descr = "ALE plots illustrate the effect of a single feature on the predicted outcome of a machine learning model.",
                                                     plot_type = 'LinePLot',
                                                     features = xai_service_pb2.Features(
                                                                 feature1=features, 
@@ -645,11 +645,11 @@ class MyExplanationsService(ExplanationsServicer):
                                                 ),      
                                             },
                                 tables = {'counterfactuals': xai_service_pb2.ExplanationsResponse(
-                                            explainability_type = 'Feature Explanation',
-                                            explanation_method = 'CounterfactualExplanations',
+                                            explainability_type = 'FeatureExplanation',
+                                            explanation_method = 'counterfactuals',
                                             explainability_model = model_id,
                                             plot_name = 'Counterfactual Explanations',
-                                            plot_descr = "fegcvd",
+                                            plot_descr = "Counterfactual Explanations identify the minimal changes needed to alter a machine learning model's prediction for a given instance.",
                                             plot_type = 'Table',
                                             table_contents = {col: xai_service_pb2.TableContents(values=cfs_feat[col].astype(str).tolist()) for col in cfs_feat.columns}
                                         )}     
@@ -658,8 +658,8 @@ class MyExplanationsService(ExplanationsServicer):
             hyperparameter_explanation = xai_service_pb2.Hyperparameter_Explanation(
                                     hyperparameter_names=list(original_model.param_grid.keys()),
                                     plots={'pdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'Hyperparameter Explanation',
-                                                    explanation_method = 'PDPlots',
+                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explanation_method = 'pdp',
                                                     explainability_model = model_id,
                                                     plot_name = 'Partial Dependece Plot (PDP)',
                                                     plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
@@ -684,11 +684,11 @@ class MyExplanationsService(ExplanationsServicer):
                                                 )
                                                 ),
                                             '2dpdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'Hyperparameter Explanation',
-                                                    explanation_method = '2DPDPlots',
+                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explanation_method = '2dpdp',
                                                     explainability_model = model_id,
                                                     plot_name = '2D-Partial Dependece Plot (PDP)',
-                                                    plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
+                                                    plot_descr = "2D-PD plots visualize how the model's accuracy changes when two hyperparameters vary.",
                                                     plot_type = 'ContourPlot',
                                                     features = xai_service_pb2.Features(
                                                                 feature1=list(param_grid.keys())[0], 
@@ -710,12 +710,11 @@ class MyExplanationsService(ExplanationsServicer):
                                                     )
                                                 ),
                                             'ale': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'Hyperparameter Explanation',
-                                                    explanation_method = 'ALEPlots',
+                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explanation_method = 'ale',
                                                     explainability_model = model_id,
                                                     plot_name = 'Accumulated Local Effects Plot (ALE)',
-                                                    plot_descr = "PD (Partial Dependence) Plots show how different hyperparameter values affect a model's accuracy, holding other hyperparameters constant, to illustrate hyperparameters impact.",
-                                                    plot_type = 'LinePLot',
+                                                    plot_descr = "ALE Plots illustrate the effect of a single hyperparameter on the accuracy of a machine learning model.",
                                                     features = xai_service_pb2.Features(
                                                                 feature1=list(param_grid.keys())[0], 
                                                                 feature2=''),
@@ -732,11 +731,11 @@ class MyExplanationsService(ExplanationsServicer):
                                                 ),    
                                             },
                                 tables = {'counterfactuals': xai_service_pb2.ExplanationsResponse(
-                                            explainability_type = 'Hyperparameter Explanation',
-                                            explanation_method = 'CounterfactualExplanations',
+                                            explainability_type = 'HyperparameterExplanation',
+                                            explanation_method = 'counterfactuals',
                                             explainability_model = model_id,
                                             plot_name = 'Counterfactual Explanations',
-                                            plot_descr = "fegcvd",
+                                            plot_descr = "Counterfactual Explanations identify the minimal changes on hyperparameter values in order to correctly classify a given missclassified instance.",
                                             plot_type = 'Table',
                                             table_contents = {col: xai_service_pb2.TableContents(values=cfs[col].astype(str).tolist()) for col in cfs.columns}
                                         )}     

@@ -1,7 +1,0 @@
-,Model__learning_rate,Model__max_depth,Model__min_child_weight,Model__n_estimators,preprocessor__num__scaler,BinaryLabel,Cost
-Query,0.1,2,1,75,StandardScaler(),1,-
-Counterfactual,0.001,2,1,75,StandardScaler(),0,1.0
-Counterfactual,0.001,2,1,95,StandardScaler(),0,1.2666666666666668
-Counterfactual,0.001,2,1,99,StandardScaler(),0,1.32
-Counterfactual,0.1,8,1,26,StandardScaler(),0,1.4033333333333333
-Counterfactual,0.1,9,1,25,StandardScaler(),0,1.5416666666666665

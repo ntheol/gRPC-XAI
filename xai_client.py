@@ -13,20 +13,20 @@ class Client():
 
     def get_explanations(self,explanation_type,explanation_method,param_grid=None,model=None,feature1=None,feature2=None,train_data=None,test_data=None,train_labels=None,test_labels=None,num_influential=None,proxy_dataset=None,query=None,features=None,target=None):
 
-        if explanation_type == 'Pipeline':
-            if explanation_method == '2D_PDPlots':
+        if explanation_type == 'HyperparameterExplanation':
+            if explanation_method == '2dpdp':
 
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                 model=model,feature1=feature1,feature2=feature2))
 
-            elif explanation_method == 'PDPlots' or explanation_method == 'ALEPlots': 
+            elif explanation_method == 'pdp' or explanation_method == 'ale': 
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                 model=model,feature1=feature1))
             
-            elif explanation_method == 'CounterfactualExplanations':
+            elif explanation_method == 'counterfactuals':
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,model=model))
                 
-            elif explanation_method == 'InfluenceFunctions':
+            elif explanation_method == 'influenceFunctions':
                 try:    
                     print("Start")
                     response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,model=model,num_influential=num_influential))
@@ -36,33 +36,33 @@ class Client():
 
 
             # Make a gRPC call to the Explanations service
-            if explanation_method == 'PDPlots':
+            if explanation_method == 'pdp':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
-            elif explanation_method == 'ALEPlots' :
+            elif explanation_method == 'ale' :
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
-            elif explanation_method == '2D_PDPlots':
+            elif explanation_method == '2dpdp':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis,explanations_response.zAxis
-            elif explanation_method == 'CounterfactualExplanations':
+            elif explanation_method == 'counterfactuals':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.table_contents
-            if explanation_method== 'InfluenceFunctions':
+            if explanation_method== 'influenceFunctions':
                 return response.influences, response.positive, response.negative
             
-        elif explanation_type == 'Model':
-            if explanation_method == 'PDPlots' or explanation_method=='ALEPlots':
+        elif explanation_type == 'FeatureExplanation':
+            if explanation_method == 'pdp' or explanation_method=='ale':
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                        model=model, feature1=feature1))
-            elif explanation_method == '2D_PDPlots':
+            elif explanation_method == '2dpdp':
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                        model=model, feature1=feature1,feature2=feature2))
-            elif explanation_method == 'CounterfactualExplanations':
+            elif explanation_method == 'counterfactuals':
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                        model=model,query=query, target=target))
             
-            if explanation_method == 'PDPlots' or explanation_method == '2D_PDPlots':
+            if explanation_method == 'pdp' or explanation_method == '2dpdp':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis,explanations_response.zAxis
-            elif explanation_method == 'CounterfactualExplanations':
+            elif explanation_method == 'counterfactuals':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.table_contents
-            elif explanation_method == 'ALEPlots':
+            elif explanation_method == 'ale':
                 return explanations_response.explainability_type,explanations_response.explanation_method,explanations_response.explainability_model,explanations_response.plot_name,explanations_response.plot_descr,explanations_response.plot_type,explanations_response.features,explanations_response.xAxis,explanations_response.yAxis
 
 
