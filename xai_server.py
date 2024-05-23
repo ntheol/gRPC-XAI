@@ -33,7 +33,7 @@ class MyExplanationsService(ExplanationsServicer):
         explanation_type = request.explanation_type
         explanation_method = request.explanation_method
 
-        if explanation_type == 'HyperparameterExplanation':
+        if explanation_type == 'hyperparameterExplanation':
 
             if explanation_method == 'pdp':
                 feature = request.feature1
@@ -307,7 +307,7 @@ class MyExplanationsService(ExplanationsServicer):
                     plot_type = 'Table',
                     table_contents = {col: xai_service_pb2.TableContents(values=cfs[col].astype(str).tolist()) for col in cfs.columns}
                 )
-        elif explanation_type == 'FeatureExplanation':
+        elif explanation_type == 'featureExplanation':
 
             if explanation_method == 'pdp' :
                 print('Receiving')
@@ -602,7 +602,7 @@ class MyExplanationsService(ExplanationsServicer):
             feature_explanation = xai_service_pb2.Feature_Explanation(
                                     feature_names=train.columns.tolist(),
                                     plots={'pdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'FeatureExplanation',
+                                                    explainability_type = 'featureExplanation',
                                                     explanation_method = 'pdp',
                                                     explainability_model = model_id,
                                                     plot_name = 'Partial Dependece Plot (PDP)',
@@ -623,7 +623,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                     ),
                                                 ),
                                             'ale': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'FeatureExplanation',
+                                                    explainability_type = 'featureExplanation',
                                                     explanation_method = 'ale',
                                                     explainability_model = model_id,
                                                     plot_name = 'Accumulated Local Effects Plot (ALE)',
@@ -645,7 +645,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                 ),      
                                             },
                                 tables = {'counterfactuals': xai_service_pb2.ExplanationsResponse(
-                                            explainability_type = 'FeatureExplanation',
+                                            explainability_type = 'featureExplanation',
                                             explanation_method = 'counterfactuals',
                                             explainability_model = model_id,
                                             plot_name = 'Counterfactual Explanations',
@@ -658,7 +658,7 @@ class MyExplanationsService(ExplanationsServicer):
             hyperparameter_explanation = xai_service_pb2.Hyperparameter_Explanation(
                                     hyperparameter_names=list(original_model.param_grid.keys()),
                                     plots={'pdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explainability_type = 'hyperparameterExplanation',
                                                     explanation_method = 'pdp',
                                                     explainability_model = model_id,
                                                     plot_name = 'Partial Dependece Plot (PDP)',
@@ -684,7 +684,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                 )
                                                 ),
                                             '2dpdp': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explainability_type = 'hyperparameterExplanation',
                                                     explanation_method = '2dpdp',
                                                     explainability_model = model_id,
                                                     plot_name = '2D-Partial Dependece Plot (PDP)',
@@ -710,7 +710,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                     )
                                                 ),
                                             'ale': xai_service_pb2.ExplanationsResponse(
-                                                    explainability_type = 'HyperparameterExplanation',
+                                                    explainability_type = 'hyperparameterExplanation',
                                                     explanation_method = 'ale',
                                                     explainability_model = model_id,
                                                     plot_name = 'Accumulated Local Effects Plot (ALE)',
@@ -731,7 +731,7 @@ class MyExplanationsService(ExplanationsServicer):
                                                 ),    
                                             },
                                 tables = {'counterfactuals': xai_service_pb2.ExplanationsResponse(
-                                            explainability_type = 'HyperparameterExplanation',
+                                            explainability_type = 'hyperparameterExplanation',
                                             explanation_method = 'counterfactuals',
                                             explainability_model = model_id,
                                             plot_name = 'Counterfactual Explanations',

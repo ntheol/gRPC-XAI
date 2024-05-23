@@ -13,7 +13,7 @@ class Client():
 
     def get_explanations(self,explanation_type,explanation_method,param_grid=None,model=None,feature1=None,feature2=None,train_data=None,test_data=None,train_labels=None,test_labels=None,num_influential=None,proxy_dataset=None,query=None,features=None,target=None):
 
-        if explanation_type == 'HyperparameterExplanation':
+        if explanation_type == 'hyperparameterExplanation':
             if explanation_method == '2dpdp':
 
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
@@ -47,7 +47,7 @@ class Client():
             if explanation_method== 'influenceFunctions':
                 return response.influences, response.positive, response.negative
             
-        elif explanation_type == 'FeatureExplanation':
+        elif explanation_type == 'featureExplanation':
             if explanation_method == 'pdp' or explanation_method=='ale':
                 explanations_response = self.stub.GetExplanation(xai_service_pb2.ExplanationsRequest(explanation_type=explanation_type,explanation_method=explanation_method,
                                                                                        model=model, feature1=feature1))
