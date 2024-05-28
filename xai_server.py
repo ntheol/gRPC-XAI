@@ -277,6 +277,7 @@ class MyExplanationsService(ExplanationsServicer):
                 query = pd.DataFrame.from_dict(original_model.best_params_,orient='index').T
                 query[categorical] = query[categorical].astype(str)
 
+
                 d = dice_ml.Data(dataframe=proxy_dataset, 
                     continuous_features=proxy_dataset.drop(columns='BinaryLabel').select_dtypes(include='number').columns.tolist()
                     , outcome_name='BinaryLabel')

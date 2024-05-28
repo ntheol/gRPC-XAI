@@ -13,7 +13,7 @@ class ModelOptimizer:
             raise ValueError("Parameter grid not provided!")
 
         if self.optimization_algorithm == 'grid_search':
-            optimizer = GridSearchCV(self.estimator, self.param_grid, cv=cv)
+            optimizer = GridSearchCV(self.estimator, self.param_grid, cv=cv,scoring='accuracy')
         elif self.optimization_algorithm == 'randomized_search':
             optimizer = RandomizedSearchCV(self.estimator, self.param_grid, cv=cv)
         elif self.optimization_algorithm == 'bayesian_optimization':

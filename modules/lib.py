@@ -39,26 +39,14 @@ def transform_grid_plt(param_grid: Dict
                 maxs = param_grid_copy[key][1]
                 param_grid_copy[key] = (mins,maxs)
             else:
-                # if is_logspaced(np.array(param_grid[key])) :
-                #     mins = min(param_grid[key])
-                #     maxs = max(param_grid[key])
-                #     param_grid[key] = Real(mins,maxs,prior='log-uniform',transform='normalize')
-                # else:
                     mins = min(param_grid_copy[key])
                     maxs = max(param_grid_copy[key])
                     param_grid_copy[key] = (mins,maxs)
 
-        # if isinstance(param_grid[key][0],(int,float)) and isinstance(param_grid[key][2],(str)):
-        #     continue
-        # if isinstance(param_grid[key][0],(int,float)):
-        #     param_grid[key] = tuple((min(param_grid[key]),max(param_grid[key])))
 
         if isinstance(value, list) and not isinstance(param_grid_copy[key][0],(str,int,float,type(None))):
             param_grid_copy[key] = [str(item) for item in value]
-        # if isinstance(value, list) and isinstance(param_grid[key][0],(int,float)):
-        #     mins = min(param_grid[key])
-        #     maxs = max(param_grid[key])
-        #     param_grid[key] = Integer(mins,maxs,prior='uniform',transform='normalize')             
+          
 
     return param_grid_copy
 
@@ -128,7 +116,6 @@ def transform_samples(hyperparameters : List[Dict],
         for i in range(len(sublist)):
             if not isinstance(sublist[i], (int,float,str,type(None))):
                 sublist[i] = str(sublist[i])
-    #samples = space.transform(spaces)
 
     return spaces
 
@@ -200,30 +187,14 @@ def proxy_model(parameter_grid,optimizer,objective,clf):
                             ("Model", clf_ut.clf_callable_map[clf].set_params(**clf_ut.clf_hyperparams_map[clf]))])
 
 
-    # kernel = ConstantKernel(1.0, (0.01, 1000.0)) \
-    #         *Matern(
-    #         length_scale=np.ones(n_dims),
-    #         length_scale_bounds=[(0.01, 100)] * n_dims, nu=2.5) + WhiteKernel()
-
-    # surrogate_model_accuracy = GaussianProcessRegressor(kernel=kernel,normalize_y=True,random_state=1,noise="gaussian",
-    #             n_restarts_optimizer=2)
 
     # Fit the surrogate model on the hyperparameters and accuracy scores
     surrogate_model_accuracy.fit(X1, y1)
 
     return surrogate_model_accuracy
 
-    # # Generate new hyperparameters for evaluation
-    # new_hyperparameters = space.transform([[1, 'auto',2 ,150,'RobustScaler()']])  # Example hyperparameters
-
-    # # Predict the accuracy scores using the surrogate model
-    # predicted_scores = surrogate_model.predict(new_hyperparameters)
-
-    # # Print the predicted accuracy scores
-    # print("Predicted Accuracy Scores:", predicted_scores)
-
 def instance_proxy(X_train,y_train,optimizer, misclassified_instance,params):
-    MODELS_DICT_PATH = 'proxy_data_models/cf_trained_models.pkl'
+    MODELS_DICT_PATH = 'metadata/proxy_data_models/cf_trained_models.pkl'
     try:
         with open(MODELS_DICT_PATH, 'rb') as f:
             trained_models = pickle.load(f)
